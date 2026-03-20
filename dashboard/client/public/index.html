@@ -6,101 +6,90 @@
   <title>KI-Mitarbeiter Kontrollzentrum</title>
   <style>
     :root {
-      --bg: #0f172a; --surface: #1e293b; --surface2: #273548;
-      --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
-      --accent: #01A09A; --accent2: #FF0068;
-      --green: #22c55e; --yellow: #F6BC26; --red: #ef4444;
+      --bg:#0f172a;--surface:#1e293b;--surface2:#273548;
+      --border:#334155;--text:#e2e8f0;--muted:#94a3b8;
+      --accent:#01A09A;--accent2:#FF0068;
+      --green:#22c55e;--yellow:#F6BC26;--red:#ef4444;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* Header */
-    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.85rem 1.5rem; display: flex; align-items: center; gap: 1rem; }
-    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; flex-shrink: 0; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    header h1 { font-size: 1.1rem; font-weight: 600; }
-    .header-sub { color: var(--muted); font-size: 0.8rem; }
-    .header-right { margin-left: auto; display: flex; gap: 0.5rem; align-items: center; }
-    .btn { padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all .15s; border: 1px solid var(--border); background: none; color: var(--muted); }
-    .btn:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn-primary:hover { opacity: .85; color: #fff; }
-    .btn-danger { border-color: var(--red); color: var(--red); }
-    .btn-danger:hover { background: var(--red); color: #fff; }
-    .btn-sm { padding: 0.2rem 0.55rem; font-size: 0.73rem; }
-    .btn:disabled { opacity: .4; cursor: default; }
-
-    /* Nav */
-    nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; gap: 0.1rem; }
-    .tab { padding: 0.6rem 1rem; font-size: 0.85rem; cursor: pointer; border: none; background: none; color: var(--muted); border-bottom: 2px solid transparent; transition: all .2s; }
-    .tab:hover { color: var(--text); }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-    /* Pages */
-    .page { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
-    .page.active { display: block; }
-
-    /* Cards */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; }
-    .card-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 0.9rem; }
-    .big-val { font-size: 1.4rem; font-weight: 700; color: var(--accent); font-family: monospace; }
-    .sub-val { color: var(--muted); font-size: 0.82rem; margin-top: 0.2rem; }
-
-    /* Rows */
-    .row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-top: 1px solid var(--border); font-size: 0.83rem; gap: 0.5rem; }
-    .row .label { color: var(--muted); flex-shrink: 0; }
-    .row .val { font-family: monospace; text-align: right; word-break: break-all; }
-    .row .actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
-
-    /* Badges */
-    .badge { padding: 1px 7px; border-radius: 999px; font-size: 0.68rem; font-weight: 600; }
-    .badge-green { background: rgba(34,197,94,.12); color: var(--green); }
-    .badge-muted { background: rgba(148,163,184,.1); color: var(--muted); }
-    .badge-red { background: rgba(239,68,68,.12); color: var(--red); }
-    .badge-yellow { background: rgba(246,188,38,.12); color: var(--yellow); }
-
-    /* Table-style list */
-    .list-header { display: flex; padding: 0.35rem 0; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); gap: 0.5rem; }
-    .list-row { display: flex; padding: 0.55rem 0; border-bottom: 1px solid var(--border); font-size: 0.83rem; align-items: center; gap: 0.5rem; }
-    .list-row:last-child { border-bottom: none; }
-    .col-name { flex: 1; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .col-info { width: 160px; color: var(--muted); font-family: monospace; font-size: 0.75rem; flex-shrink: 0; }
-    .col-status { width: 80px; flex-shrink: 0; }
-    .col-actions { width: 130px; display: flex; gap: 0.3rem; flex-shrink: 0; justify-content: flex-end; }
-
-    /* Docs editor */
-    .docs-layout { display: flex; gap: 1.25rem; height: calc(100vh - 160px); }
-    .docs-sidebar { width: 210px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow-y: auto; }
-    .sidebar-title { padding: 0.75rem 1rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--border); }
-    .sidebar-file { display: block; width: 100%; text-align: left; padding: 0.5rem 1rem; font-size: 0.8rem; font-family: monospace; background: none; border: none; color: var(--muted); cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
-    .sidebar-file:hover { background: var(--surface2); color: var(--text); }
-    .sidebar-file.active { color: var(--accent); border-left-color: var(--accent); background: var(--surface2); }
-    .docs-editor { flex: 1; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-    .editor-bar { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
-    .editor-filename { font-family: monospace; color: var(--accent); font-size: 0.85rem; flex: 1; }
-    .editor-hint { font-size: 0.75rem; color: var(--green); opacity: 0; transition: opacity .3s; }
-    .editor-hint.show { opacity: 1; }
-    textarea { flex: 1; background: transparent; color: var(--text); border: none; padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.82rem; line-height: 1.65; resize: none; outline: none; }
-    .editor-placeholder { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.9rem; }
-
-    /* Env form */
-    .form-row { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
-    input[type=text], input[type=password] {
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      padding: 0.4rem 0.75rem; border-radius: 6px; font-size: 0.85rem; flex: 1; outline: none;
-    }
-    input:focus { border-color: var(--accent); }
-
-    /* Toast */
-    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 1.1rem; font-size: 0.83rem; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 99; }
-    #toast.show { opacity: 1; }
-    #toast.ok { border-color: var(--green); color: var(--green); }
-    #toast.err { border-color: var(--red); color: var(--red); }
-
-    .loading { color: var(--muted); font-style: italic; font-size: 0.83rem; padding: 1rem 0; }
-    footer { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.75rem; }
-    footer a { color: var(--accent); text-decoration: none; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem}
+    .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    header h1{font-size:1.1rem;font-weight:600}
+    .header-sub{color:var(--muted);font-size:.8rem}
+    .header-right{margin-left:auto;display:flex;gap:.5rem;align-items:center}
+    .btn{padding:.3rem .8rem;border-radius:6px;font-size:.8rem;cursor:pointer;transition:all .15s;border:1px solid var(--border);background:none;color:var(--muted)}
+    .btn:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .btn-primary:hover{opacity:.85;color:#fff}
+    .btn-danger{border-color:var(--red);color:var(--red)}
+    .btn-danger:hover{background:var(--red);color:#fff}
+    .btn-sm{padding:.2rem .55rem;font-size:.73rem}
+    .btn:disabled{opacity:.4;cursor:default}
+    nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:.1rem}
+    .tab{padding:.6rem 1rem;font-size:.85rem;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s}
+    .tab:hover{color:var(--text)}
+    .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .page{display:none;padding:1.5rem;max-width:1200px;margin:0 auto}
+    .page.active{display:block}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem}
+    .card-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.9rem}
+    .big-val{font-size:1.4rem;font-weight:700;color:var(--accent);font-family:monospace}
+    .sub-val{color:var(--muted);font-size:.82rem;margin-top:.2rem}
+    .row{display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-top:1px solid var(--border);font-size:.83rem;gap:.5rem}
+    .row .label{color:var(--muted);flex-shrink:0}
+    .row .val{font-family:monospace;text-align:right;word-break:break-all}
+    .row .actions{display:flex;gap:.3rem;flex-shrink:0}
+    .badge{padding:1px 7px;border-radius:999px;font-size:.68rem;font-weight:600}
+    .badge-green{background:rgba(34,197,94,.12);color:var(--green)}
+    .badge-muted{background:rgba(148,163,184,.1);color:var(--muted)}
+    .badge-red{background:rgba(239,68,68,.12);color:var(--red)}
+    .badge-yellow{background:rgba(246,188,38,.12);color:var(--yellow)}
+    .split-layout{display:flex;gap:1.25rem;height:calc(100vh - 160px)}
+    .split-sidebar{width:240px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow-y:auto;display:flex;flex-direction:column}
+    .split-main{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+    .sidebar-title{padding:.75rem 1rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border-bottom:1px solid var(--border);flex-shrink:0}
+    .sidebar-item{display:block;width:100%;text-align:left;padding:.5rem 1rem;font-size:.82rem;background:none;border:none;color:var(--muted);cursor:pointer;border-left:2px solid transparent;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sidebar-item:hover{background:var(--surface2);color:var(--text)}
+    .sidebar-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--surface2)}
+    .detail-bar{padding:.65rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;flex-shrink:0;flex-wrap:wrap}
+    .detail-title{font-size:.9rem;font-weight:600;flex:1}
+    .detail-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+    .detail-content{flex:1;display:flex;flex-direction:column;padding:1rem;min-height:0;overflow:auto}
+    .detail-placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+    .field-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.4rem}
+    textarea.editor{flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.75rem;font-size:.82rem;line-height:1.65;resize:none;outline:none;font-family:inherit;min-height:120px}
+    textarea.editor:focus{border-color:var(--accent)}
+    .form-row{display:flex;gap:.75rem;margin-bottom:1rem}
+    input[type=text],input[type=password]{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.4rem .75rem;border-radius:6px;font-size:.85rem;flex:1;outline:none}
+    input:focus{border-color:var(--accent)}
+    .list-header{display:flex;padding:.35rem 0;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);gap:.5rem}
+    .list-row{display:flex;padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.83rem;align-items:center;gap:.5rem}
+    .list-row:last-child{border-bottom:none}
+    .col-name{flex:1;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .col-info{width:140px;color:var(--muted);font-family:monospace;font-size:.75rem;flex-shrink:0}
+    .col-status{width:80px;flex-shrink:0}
+    .col-actions{display:flex;gap:.3rem;flex-shrink:0}
+    #toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.6rem 1.1rem;font-size:.83rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:99}
+    #toast.show{opacity:1}
+    #toast.ok{border-color:var(--green);color:var(--green)}
+    #toast.err{border-color:var(--red);color:var(--red)}
+    .loading{color:var(--muted);font-style:italic;font-size:.83rem;padding:1rem 0}
+    #loginOverlay{display:none;position:fixed;inset:0;background:#0f172a;z-index:1000;align-items:center;justify-content:center}
+    #loginOverlay.show{display:flex}
+    .login-box{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:2.5rem 2rem;width:340px;text-align:center}
+    .login-box h2{font-size:1.2rem;margin-bottom:.4rem}
+    .login-box p{color:#94a3b8;font-size:.82rem;margin-bottom:1.5rem}
+    .login-box input{width:100%;margin-bottom:1rem;background:#273548;border:1px solid #334155;color:#e2e8f0;padding:.55rem .9rem;border-radius:7px;font-size:.88rem;outline:none}
+    .login-box input:focus{border-color:#01A09A}
+    .login-box button{width:100%;padding:.55rem;background:#01A09A;color:#fff;border:none;border-radius:7px;font-size:.9rem;cursor:pointer}
+    .login-box button:hover{opacity:.85}
+    .login-error{color:#ef4444;font-size:.8rem;margin-top:.75rem;min-height:1.2em}
+    .hint{font-size:.75rem;color:var(--green);opacity:0;transition:opacity .3s}
+    .hint.show{opacity:1}
+    .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.72rem;background:rgba(1,160,154,.1);color:var(--accent);margin-right:.25rem}
   </style>
 </head>
 <body>
@@ -108,451 +97,75 @@
 <header>
   <div class="dot"></div>
   <div>
-    <h1>KI-Mitarbeiter Kontrollzentrum</h1>
+    <h1>🔒 KI-Mitarbeiter Kontrollzentrum</h1>
     <div class="header-sub" id="headerSub">Lädt…</div>
   </div>
   <div class="header-right">
     <button class="btn" onclick="loadAll()">↻ Aktualisieren</button>
+    <button class="btn btn-danger btn-sm" onclick="doLogout()">Abmelden</button>
   </div>
 </header>
 
 <nav>
-  <button class="tab active" onclick="showPage('overview', this)">📊 Übersicht</button>
-  <button class="tab" onclick="showPage('crons', this)">⏰ Aufgaben</button>
-  <button class="tab" onclick="showPage('env', this)">🔑 Zugangsdaten</button>
-  <button class="tab" onclick="showPage('docs', this)">📝 Dateien</button>
+  <button class="tab active" onclick="showPage('overview',this)">📊 Übersicht</button>
+  <button class="tab" onclick="showPage('crons',this)">⏰ Aufgaben</button>
+  <button class="tab" onclick="showPage('env',this)">🔑 Zugangsdaten</button>
+  <button class="tab" onclick="showPage('docs',this)">📝 Dateien</button>
 </nav>
 
-<!-- ── ÜBERSICHT ────────────────────────────────── -->
+<!-- ÜBERSICHT -->
 <div id="page-overview" class="page active">
   <div class="grid">
-
-    <div class="card">
-      <div class="card-title">🔒 Verbindung</div>
-      <div id="tsCard"><span class="loading">Lädt…</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">💻 Server-Status</div>
-      <div id="sysCard"><span class="loading">Lädt…</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🤖 Assistent</div>
-      <div id="ocCard"><span class="loading">Lädt…</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">⏰ Automatische Aufgaben</div>
-      <div id="cronSummary"><span class="loading">Lädt…</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🔑 Zugangsdaten</div>
-      <div id="envSummary"><span class="loading">Lädt…</span></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📝 Meine Dateien</div>
-      <div id="wsSummary"><span class="loading">Lädt…</span></div>
-    </div>
-
+    <div class="card"><div class="card-title">🔒 Verbindung</div><div id="tsCard"><span class="loading">Lädt…</span></div></div>
+    <div class="card"><div class="card-title">💻 Server-Status</div><div id="sysCard"><span class="loading">Lädt…</span></div></div>
+    <div class="card"><div class="card-title">🤖 Assistent</div><div id="ocCard"><span class="loading">Lädt…</span></div></div>
+    <div class="card"><div class="card-title">⏰ Automatische Aufgaben</div><div id="cronSummary"><span class="loading">Lädt…</span></div></div>
+    <div class="card"><div class="card-title">🔑 Zugangsdaten</div><div id="envSummary"><span class="loading">Lädt…</span></div></div>
+    <div class="card"><div class="card-title">📝 Meine Dateien</div><div id="wsSummary"><span class="loading">Lädt…</span></div></div>
   </div>
 </div>
 
-<!-- ── CRON JOBS ─────────────────────────────────── -->
-<div id="page-crons" class="page" style="display:none">
-  <div style="display:flex;gap:1.25rem;height:calc(100vh - 160px)">
-    <!-- Liste links -->
-    <div style="width:260px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow-y:auto">
+<!-- AUFGABEN -->
+<div id="page-crons" class="page">
+  <div class="split-layout">
+    <div class="split-sidebar">
       <div class="sidebar-title">Aufgaben</div>
       <div id="cronList"></div>
     </div>
-    <!-- Detail rechts -->
-    <div id="cronDetail" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column">
-      <div style="padding:2rem;color:var(--muted);text-align:center;margin:auto">← Aufgabe auswählen</div>
+    <div class="split-main" id="cronDetail">
+      <div class="detail-placeholder">← Aufgabe auswählen</div>
     </div>
   </div>
 </div>
 
-<!-- ── ENV VARIABLEN ──────────────────────────────── -->
+<!-- ZUGANGSDATEN -->
 <div id="page-env" class="page">
-  <div class="card" style="max-width:680px">
+  <div class="card" style="max-width:680px;margin-bottom:1.25rem">
     <div class="card-title">🔑 Neue Zugangsdaten eintragen</div>
     <div class="form-row">
-      <input type="text" id="envKey" placeholder="KEY (z.B. CLICKUP_API_KEY)" />
-      <input type="password" id="envVal" placeholder="Wert" />
+      <input type="text" id="envKey" placeholder="Name (z.B. CLICKUP_API_KEY)" />
+      <input type="password" id="envVal" placeholder="Wert / Schlüssel" />
       <button class="btn btn-primary" onclick="saveEnv()">Speichern</button>
     </div>
   </div>
-  <br>
   <div class="card">
     <div class="card-title">🔑 Gespeicherte Zugangsdaten</div>
     <div id="envTable"><span class="loading">Lädt…</span></div>
   </div>
 </div>
 
-<!-- ── DOKUMENTE ─────────────────────────────────── -->
+<!-- DATEIEN -->
 <div id="page-docs" class="page">
-  <div class="docs-layout">
-    <div class="docs-sidebar">
+  <div class="split-layout">
+    <div class="split-sidebar">
       <div class="sidebar-title">Dateien</div>
       <div id="docsList"></div>
     </div>
-    <div class="docs-editor">
-      <div class="editor-bar" id="editorBar" style="display:none">
-        <span class="editor-filename" id="editorFilename"></span>
-        <span class="editor-hint" id="editorHint">✓ Gespeichert</span>
-        <button class="btn btn-primary btn-sm" onclick="saveDoc()">Speichern</button>
-      </div>
-      <div class="editor-placeholder" id="editorPlaceholder">← Datei auswählen</div>
-      <textarea id="docTextarea" style="display:none" spellcheck="false"></textarea>
+    <div class="split-main" id="docsEditor">
+      <div class="detail-placeholder">← Datei auswählen</div>
     </div>
   </div>
 </div>
-
-<footer><a href="https://jasmindipardo.de" target="_blank">jasmindipardo.de</a></footer>
-<div id="toast"></div>
-
-<script>
-// ── Utils ────────────────────────────────────────
-async function api(url, opts) {
-  const r = await fetch(url, opts);
-  return r.json();
-}
-function toast(msg, type='ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show ' + type;
-  setTimeout(() => el.className = '', 2500);
-}
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  btn.classList.add('active');
-  if (id === 'crons') loadCronTable();
-  if (id === 'env') loadEnvTable();
-  if (id === 'docs') loadDocsList();
-}
-
-// ── ÜBERSICHT ────────────────────────────────────
-async function loadOverview() {
-  // Tailscale
-  const ts = await api('/api/tailscale');
-  let html = `<div class="big-val">${ts.ip}</div><div class="sub-val">Deine Tailscale-IP</div>`;
-  (ts.peers || []).slice(0, 5).forEach(p => {
-    html += `<div class="row"><span class="label">${p.name}</span><span class="val" style="font-size:.75rem">${p.ip}</span><span class="badge ${p.online ? 'badge-green' : 'badge-muted'}">${p.online ? 'online' : 'offline'}</span></div>`;
-  
-  if (!ts.peers?.length) html += `<div class="row"><span class="label" style="font-style:italic">Keine weiteren Geräte</span></div>`;
-  document.getElementById('tsCard').innerHTML = html;
-
-  // System
-  const sys = await api('/api/system');
-  let sh = '';
-  [['Hostname', sys.hostname], ['Uptime', sys.uptime], ['RAM', sys.mem], ['Disk', sys.disk], ['OpenClaw', sys.version]].forEach(([l, v]) => {
-    if (v) sh += `<div class="row"><span class="label">${l}</span><span class="val">${v}</span></div>`;
-  
-  document.getElementById('sysCard').innerHTML = sh;
-
-  // OpenClaw
-  const oc = await api('/api/openclaw/status');
-  const ocRunning = oc.status && oc.status.includes('active');
-  let och = `<div class="row"><span class="label">Version</span><span class="val">${oc.version || '–'}</span></div>`;
-  och += `<div class="row"><span class="label">Status</span><span class="badge ${ocRunning ? 'badge-green' : 'badge-yellow'}">${ocRunning ? 'läuft ✓' : 'prüfen'}</span></div>`;
-  document.getElementById('ocCard').innerHTML = och;
-
-  // Cron summary
-  const cr = await api('/api/crons');
-  const jobs = cr.jobs || cr || [];
-  const active = Array.isArray(jobs) ? jobs.filter(j => j.enabled !== false).length : 0;
-  const total = Array.isArray(jobs) ? jobs.length : 0;
-  let crh = `<div class="big-val">${active}<span style="font-size:1rem;color:var(--muted)">/${total}</span></div><div class="sub-val">aktive Jobs</div>`;
-  if (Array.isArray(jobs)) jobs.slice(0, 4).forEach(j => {
-    const s = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : '–');
-    crh += `<div class="row"><span class="label">${j.name || j.id || 'Job'}</span><span class="badge ${j.enabled !== false ? 'badge-green' : 'badge-muted'}">${j.enabled !== false ? 'aktiv' : 'aus'}</span></div>`;
-  
-  document.getElementById('cronSummary').innerHTML = crh;
-
-  // Env summary
-  const en = await api('/api/env');
-  const vars = en.vars || [];
-  let enh = `<div class="big-val">${vars.length}</div><div class="sub-val">Variablen gesetzt</div>`;
-  vars.slice(0, 5).forEach(v => {
-    enh += `<div class="row"><span class="label" style="font-family:monospace">${v.key}</span><span class="val" style="color:var(--muted)">${v.preview}</span></div>`;
-  
-  document.getElementById('envSummary').innerHTML = enh;
-
-  // Workspace
-  const ws = await api('/api/workspace');
-  const files = ws.files || [];
-  let wsh = `<div class="big-val">${files.length}</div><div class="sub-val">Dateien im Workspace</div>`;
-  files.slice(0, 5).forEach(f => {
-    const d = new Date(f.modified).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'
-    wsh += `<div class="row"><span class="label" style="font-family:monospace">${f.name}</span><span class="val" style="color:var(--muted)">${d}</span></div>`;
-  
-  document.getElementById('wsSummary').innerHTML = wsh;
-
-  document.getElementById('headerSub').textContent = `Zuletzt: ${new Date().toLocaleTimeString('de-DE')}`;
-}
-
-// ── CRON LIST + DETAIL ───────────────────────────
-let allCronJobs = [];
-let selectedCronId = null;
-
-async function loadCronTable() {
-  const cr = await api('/api/crons?fresh=1');
-  allCronJobs = cr.jobs || cr || [];
-  renderCronList();
-}
-
-function renderCronList() {
-  const el = document.getElementById('cronList');
-  if (!el) return;
-  if (!allCronJobs.length) { el.innerHTML = '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.8rem">Keine Aufgaben</div>'; return; }
-  el.innerHTML = allCronJobs.map(j => {
-    const id = j.id || '';
-    const name = j.name || id;
-    const active = j.enabled !== false;
-    return `<button class="sidebar-file ${selectedCronId === id ? 'active' : ''}" onclick="selectCron('${id}')">
-      <span style="display:flex;justify-content:space-between;align-items:center;width:100%">
-        <span>${name}</span>
-        <span class="badge ${active ? 'badge-green' : 'badge-muted'}" style="font-size:.65rem">${active ? '●' : '○'}</span>
-      </span>
-    </button>`;
-  }).join('');
-}
-
-function selectCron(id) {
-  selectedCronId = id;
-  renderCronList();
-  const j = allCronJobs.find(j => (j.id || '') === id);
-  if (!j) return;
-
-  const active = j.enabled !== false;
-  const sched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : '–');
-  const message = j.payload?.message || j.payload?.text || '';
-  const lastRun = j.state?.lastRunAtMs ? new Date(j.state.lastRunAtMs).toLocaleString('de-DE') : '–';
-  const nextRun = j.state?.nextRunAtMs ? new Date(j.state.nextRunAtMs).toLocaleString('de-DE') : '–';
-
-  document.getElementById('cronDetail').innerHTML = `
-    <div class="editor-bar">
-      <span class="editor-filename">${j.name || id}</span>
-      <span class="badge ${active ? 'badge-green' : 'badge-muted'}">${active ? 'aktiv' : 'pausiert'}</span>
-      <div class="editor-actions">
-        <button class="btn btn-sm" onclick="runCron('${id}')">▶ Jetzt starten</button>
-        <button class="btn btn-sm" onclick="toggleCron('${id}', ${active})">${active ? '⏸ Pausieren' : '▶ Aktivieren'}</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteCron('${id}')">✕ Löschen</button>
-      </div>
-    </div>
-    <div style="padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;border-bottom:1px solid var(--border)">
-      <div class="row"><span class="label">Zeitplan</span><span class="val" style="font-family:monospace">${sched}</span></div>
-      <div class="row"><span class="label">Letzter Lauf</span><span class="val">${lastRun}</span></div>
-      <div class="row"><span class="label">Nächster Lauf</span><span class="val">${nextRun}</span></div>
-      <div class="row"><span class="label">ID</span><span class="val" style="font-size:.75rem;color:var(--muted)">${id}</span></div>
-    </div>
-    <div style="padding:1rem;flex:1;display:flex;flex-direction:column">
-      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem">Anweisung (bearbeitbar)</div>
-      <textarea id="cronMsg" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.75rem;font-size:.82rem;line-height:1.6;resize:none;outline:none;font-family:inherit" spellcheck="false">${message}</textarea>
-      <div style="display:flex;gap:.5rem;margin-top:.75rem;justify-content:flex-end">
-        <span id="cronSaveHint" style="font-size:.75rem;color:var(--green);opacity:0;transition:opacity .3s;align-self:center">✓ Gespeichert</span>
-        <button class="btn btn-primary btn-sm" onclick="saveCronMessage('${id}')">Anweisung speichern</button>
-      </div>
-    </div>`;
-}
-
-async function saveCronMessage(id) {
-  const msg = document.getElementById('cronMsg')?.value;
-  if (!msg) return;
-  const r = await api(`/api/crons/${id}/message`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ message: msg })
-  });
-  if (r.ok) {
-    const hint = document.getElementById('cronSaveHint');
-    if (hint) { hint.style.opacity = '1'; setTimeout(() => hint.style.opacity = '0', 2000); }
-    toast('Anweisung gespeichert');
-    await loadCronTable();
-    selectCron(id);
-  } else toast(r.error || 'Fehler beim Speichern', 'err');
-}
-
-async function toggleCron(id, active) {
-  await api(`/api/crons/${id}/${active ? 'disable' : 'enable'}`, { method: 'POST' });
-  toast(active ? 'Aufgabe pausiert' : 'Aufgabe aktiviert');
-  await loadCronTable();
-  if (selectedCronId === id) selectCron(id);
-  loadOverview();
-}
-async function deleteCron(id) {
-  if (!confirm(`Aufgabe wirklich löschen?`)) return;
-  await api(`/api/crons/${id}`, { method: 'DELETE' });
-  toast('Aufgabe gelöscht');
-  selectedCronId = null;
-  document.getElementById('cronDetail').innerHTML = '<div style="padding:2rem;color:var(--muted);text-align:center;margin:auto">← Aufgabe auswählen</div>';
-  await loadCronTable();
-  loadOverview();
-}
-async function runCron(id) {
-  await api(`/api/crons/${id}/run`, { method: 'POST' });
-  toast(`Aufgabe gestartet`);
-}
-
-// ── ENV TABLE ────────────────────────────────────
-async function loadEnvTable() {
-  const el = document.getElementById('envTable');
-  el.innerHTML = '<span class="loading">Lädt…</span>';
-  const en = await api('/api/env');
-  const vars = en.vars || [];
-  if (!vars.length) { el.innerHTML = '<span class="loading">Noch keine Variablen gesetzt.</span>'; return; }
-  let html = `<div class="list-header"><span class="col-name">Key</span><span class="col-info">Wert (maskiert)</span><span class="col-actions"></span></div>`;
-  vars.forEach(v => {
-    html += `<div class="list-row">
-      <span class="col-name" style="font-family:monospace">${v.key}</span>
-      <span class="col-info">${v.preview}</span>
-      <span class="col-actions">
-        <button class="btn btn-sm btn-danger" onclick="deleteEnv('${v.key}')">✕ Löschen</button>
-      </span>
-    </div>`;
-  
-  el.innerHTML = html;
-}
-async function saveEnv() {
-  const key = document.getElementById('envKey').value.trim();
-  const value = document.getElementById('envVal').value;
-  if (!key) { toast('Key fehlt', 'err'); return; }
-  await api('/api/env', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key, value }) 
-  document.getElementById('envKey').value = '';
-  document.getElementById('envVal').value = '';
-  toast(`${key} gespeichert`);
-  loadEnvTable();
-  loadOverview();
-}
-async function deleteEnv(key) {
-  if (!confirm(`Variable "${key}" löschen?`)) return;
-  await api(`/api/env/${key}`, { method: 'DELETE' 
-  toast(`${key} gelöscht`);
-  loadEnvTable();
-  loadOverview();
-}
-
-// ── DOCS EDITOR ──────────────────────────────────
-let currentDoc = null;
-
-let currentDir = '';
-
-async function loadDocsList(dir) {
-  dir = dir || '';
-  currentDir = dir;
-  const ws = await api('/api/workspace' + (dir ? `?dir=${encodeURIComponent(dir)}` : ''));
-  const files = ws.files || [];
-  const dirs = ws.dirs || [];
-  const el = document.getElementById('docsList');
-  let html = '';
-
-  // Zurück-Button
-  if (dir) {
-    const parent = dir.includes('/') ? dir.substring(0, dir.lastIndexOf('/')) : '';
-    html += `<button class="sidebar-file" onclick="loadDocsList('${parent}')" style="color:var(--accent);font-size:.75rem">← zurück</button>`;
-  }
-
-  // Unterordner
-  dirs.forEach(d => {
-    const icon = d.name === 'skills' ? '🛠️' : d.name === 'memory' ? '🧠' : d.name === 'checklists' ? '✅' : '📁';
-    html += `<button class="sidebar-file" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;
-  
-
-  // Dateien
-  if (!files.length && !dirs.length) {
-    html += '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.8rem">Keine Dateien</div>';
-  }
-  files.forEach(f => {
-    html += `<button class="sidebar-file ${currentDoc === f.path ? 'active' : ''}" onclick="openDoc('${f.path}')" title="${f.path}">${f.name}</button>`;
-  
-  el.innerHTML = html;
-}
-
-async function openDoc(filePath) {
-  const data = await api(`/api/workspace/file?name=${encodeURIComponent(filePath)}`);
-  if (data.error) { toast(data.error, 'err'); return; }
-  currentDoc = filePath;
-  document.getElementById('editorFilename').textContent = filePath;
-  document.getElementById('editorBar').style.display = 'flex';
-  document.getElementById('editorPlaceholder').style.display = 'none';
-  document.getElementById('docTextarea').style.display = 'block';
-  document.getElementById('docTextarea').value = data.content;
-  document.getElementById('editorHint').classList.remove('show');
-  document.querySelectorAll('.sidebar-file').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('onclick') === `openDoc('${filePath}')`);
-  
-}
-
-async function saveDoc() {
-  if (!currentDoc) return;
-  const content = document.getElementById('docTextarea').value;
-  const r = await api('/api/workspace/file', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: currentDoc, content })
-  
-  if (r.ok) {
-    const hint = document.getElementById('editorHint');
-    hint.classList.add('show');
-    setTimeout(() => hint.classList.remove('show'), 2000);
-    toast(`${currentDoc} gespeichert`);
-  } else toast(r.error || 'Fehler', 'err');
-}
-
-// Ctrl+S / Cmd+S im Editor
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveDoc(); }
-
-
-// ── Init ──────────────────────────────────────────
-async function loadAll() { await loadOverview(); }
-loadAll();
-setInterval(loadAll, 60000);
-</script>
-</body>
-</html>
-
-<style>
-  #loginOverlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: #0f172a;
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-  }
-  #loginOverlay.show { display: flex; }
-  .login-box {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 14px;
-    padding: 2.5rem 2rem;
-    width: 340px;
-    text-align: center;
-  }
-  .login-box h2 { font-size: 1.2rem; margin-bottom: 0.4rem; }
-  .login-box p { color: #94a3b8; font-size: 0.82rem; margin-bottom: 1.5rem; }
-  .login-box input {
-    width: 100%; margin-bottom: 1rem;
-    background: #273548; border: 1px solid #334155;
-    color: #e2e8f0; padding: 0.55rem 0.9rem;
-    border-radius: 7px; font-size: 0.88rem; outline: none;
-  }
-  .login-box input:focus { border-color: #01A09A; }
-  .login-box button {
-    width: 100%; padding: 0.55rem;
-    background: #01A09A; color: #fff;
-    border: none; border-radius: 7px;
-    font-size: 0.9rem; cursor: pointer;
-  }
-  .login-box button:hover { opacity: .85; }
-  .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 0.75rem; min-height: 1.2em; }
-</style>
 
 <div id="loginOverlay">
   <div class="login-box">
@@ -564,8 +177,10 @@ setInterval(loadAll, 60000);
   </div>
 </div>
 
+<div id="toast"></div>
+
 <script>
-// Auth Token im sessionStorage (weg wenn Tab geschlossen)
+// ── AUTH ──────────────────────────────────────
 let authToken = sessionStorage.getItem('ki_token');
 
 async function doLogin() {
@@ -573,11 +188,7 @@ async function doLogin() {
   const errEl = document.getElementById('loginError');
   errEl.textContent = '';
   try {
-    const r = await fetch('/api/login', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ password: pw })
-    
+    const r = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) });
     const data = await r.json();
     if (r.ok && data.token) {
       authToken = data.token;
@@ -585,39 +196,306 @@ async function doLogin() {
       document.getElementById('loginOverlay').classList.remove('show');
       loadAll();
     } else {
-      errEl.textContent = data.error || 'Fehler beim Login';
+      errEl.textContent = data.error || 'Falsches Passwort';
       document.getElementById('loginPw').value = '';
     }
   } catch(e) { errEl.textContent = 'Verbindungsfehler'; }
 }
 
-// Alle API-Calls mit Auth-Header
-const origFetch = window.fetch;
-window.fetch = function(url, opts = {}) {
-  if (typeof url === 'string' && url.startsWith('/api/') && !url.includes('/api/login')) {
-    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + (authToken || '') };
+async function doLogout() {
+  await fetch('/api/logout', { method:'POST', headers:{'Authorization':'Bearer '+authToken} }).catch(()=>{});
+  sessionStorage.removeItem('ki_token');
+  authToken = null;
+  document.getElementById('loginOverlay').classList.add('show');
+}
+
+const _origFetch = window.fetch;
+window.fetch = function(url, opts={}) {
+  if (typeof url==='string' && url.startsWith('/api/') && !url.includes('/api/login')) {
+    opts.headers = {...(opts.headers||{}), 'Authorization':'Bearer '+(authToken||'')};
   }
-  return origFetch(url, opts).then(async r => {
-    if (r.status === 401) {
-      sessionStorage.removeItem('ki_token');
-      authToken = null;
+  return _origFetch(url, opts).then(async r => {
+    if (r.status===401) {
+      sessionStorage.removeItem('ki_token'); authToken=null;
       document.getElementById('loginOverlay').classList.add('show');
       document.getElementById('loginError').textContent = 'Session abgelaufen – bitte neu einloggen';
-      return r;
     }
     return r;
-  
+  });
 };
 
-// Beim Start: prüfen ob Token noch gültig
 (async function initAuth() {
-  if (!authToken) {
-    document.getElementById('loginOverlay').classList.add('show');
-    return;
-  }
+  if (!authToken) { document.getElementById('loginOverlay').classList.add('show'); return; }
   const r = await fetch('/api/me');
-  if (!r.ok) {
-    document.getElementById('loginOverlay').classList.add('show');
-  }
+  if (!r.ok) document.getElementById('loginOverlay').classList.add('show');
 })();
+
+// ── UTILS ─────────────────────────────────────
+async function api(url, opts) { const r = await fetch(url, opts); return r.json(); }
+
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show '+type;
+  setTimeout(() => el.className = '', 2500);
+}
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='crons') loadCronList();
+  if (id==='env') loadEnvTable();
+  if (id==='docs') loadDocsList('');
+}
+
+// ── ÜBERSICHT ────────────────────────────────
+async function loadOverview() {
+  // Tailscale
+  try {
+    const ts = await api('/api/tailscale');
+    let h = `<div class="big-val">${ts.ip||'–'}</div><div class="sub-val">Tailscale-IP</div>`;
+    (ts.peers||[]).slice(0,4).forEach(p => {
+      h += `<div class="row"><span class="label">${p.name}</span><span><span class="badge ${p.online?'badge-green':'badge-muted'}">${p.online?'online':'offline'}</span></span></div>`;
+    });
+    if (!(ts.peers||[]).length) h += `<div class="row"><span class="label" style="font-style:italic">Keine weiteren Geräte verbunden</span></div>`;
+    document.getElementById('tsCard').innerHTML = h;
+  } catch(e) { document.getElementById('tsCard').innerHTML = '<span class="loading">Nicht erreichbar</span>'; }
+
+  // System
+  try {
+    const sys = await api('/api/system');
+    let h = '';
+    [['Hostname',sys.hostname],['Uptime',sys.uptime],['RAM',sys.mem],['Festplatte',sys.disk],['Version',sys.version]].forEach(([l,v]) => {
+      if (v) h += `<div class="row"><span class="label">${l}</span><span class="val">${v}</span></div>`;
+    });
+    document.getElementById('sysCard').innerHTML = h;
+  } catch(e) {}
+
+  // Assistent
+  try {
+    const oc = await api('/api/openclaw/status');
+    const running = oc.status && oc.status.includes('active');
+    let h = `<div class="row"><span class="label">Version</span><span class="val">${oc.version||'–'}</span></div>`;
+    h += `<div class="row"><span class="label">Status</span><span class="badge ${running?'badge-green':'badge-yellow'}">${running?'Läuft ✓':'Prüfen'}</span></div>`;
+    document.getElementById('ocCard').innerHTML = h;
+  } catch(e) {}
+
+  // Cron Summary
+  try {
+    const cr = await api('/api/crons');
+    const jobs = cr.jobs||[];
+    const active = jobs.filter(j=>j.enabled!==false).length;
+    let h = `<div class="big-val">${active}<span style="font-size:1rem;color:var(--muted)">/${jobs.length}</span></div><div class="sub-val">aktive Aufgaben</div>`;
+    jobs.slice(0,4).forEach(j => {
+      h += `<div class="row"><span class="label">${j.name||j.id||'Job'}</span><span class="badge ${j.enabled!==false?'badge-green':'badge-muted'}">${j.enabled!==false?'aktiv':'pausiert'}</span></div>`;
+    });
+    document.getElementById('cronSummary').innerHTML = h;
+  } catch(e) {}
+
+  // Env Summary
+  try {
+    const en = await api('/api/env');
+    const vars = en.vars||[];
+    let h = `<div class="big-val">${vars.length}</div><div class="sub-val">Zugangsdaten hinterlegt</div>`;
+    vars.slice(0,5).forEach(v => {
+      h += `<div class="row"><span class="label" style="font-family:monospace">${v.key}</span><span class="val" style="color:var(--muted)">${v.preview}</span></div>`;
+    });
+    document.getElementById('envSummary').innerHTML = h;
+  } catch(e) {}
+
+  // Workspace
+  try {
+    const ws = await api('/api/workspace');
+    const files = ws.files||[];
+    let h = `<div class="big-val">${files.length}</div><div class="sub-val">Dateien im Workspace</div>`;
+    files.slice(0,5).forEach(f => {
+      const d = new Date(f.modified).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+      h += `<div class="row"><span class="label" style="font-family:monospace">${f.name}</span><span class="val" style="color:var(--muted)">${d}</span></div>`;
+    });
+    document.getElementById('wsSummary').innerHTML = h;
+  } catch(e) {}
+
+  document.getElementById('headerSub').textContent = `Zuletzt: ${new Date().toLocaleTimeString('de-DE')}`;
+}
+
+// ── AUFGABEN ─────────────────────────────────
+let allJobs = [];
+let selectedJobId = null;
+
+async function loadCronList() {
+  const cr = await api('/api/crons?fresh=1');
+  allJobs = cr.jobs||[];
+  const el = document.getElementById('cronList');
+  if (!allJobs.length) { el.innerHTML = '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Aufgaben</div>'; return; }
+  el.innerHTML = allJobs.map(j => {
+    const active = j.enabled!==false;
+    return `<button class="sidebar-item ${selectedJobId===j.id?'active':''}" onclick="selectJob('${j.id}')">
+      <span style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <span>${j.name||j.id}</span>
+        <span class="badge ${active?'badge-green':'badge-muted'}">${active?'●':'○'}</span>
+      </span>
+    </button>`;
+  }).join('');
+}
+
+function selectJob(id) {
+  selectedJobId = id;
+  document.querySelectorAll('#cronList .sidebar-item').forEach(b => b.classList.toggle('active', b.getAttribute('onclick')===`selectJob('${id}')`));
+  const j = allJobs.find(j=>j.id===id);
+  if (!j) return;
+  const active = j.enabled!==false;
+  const sched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : j.schedule?.kind||'–');
+  const msg = j.payload?.message||j.payload?.text||'';
+  const lastRun = j.state?.lastRunAtMs ? new Date(j.state.lastRunAtMs).toLocaleString('de-DE') : '–';
+  const nextRun = j.state?.nextRunAtMs ? new Date(j.state.nextRunAtMs).toLocaleString('de-DE') : '–';
+  const lastStatus = j.state?.lastStatus||'–';
+
+  document.getElementById('cronDetail').innerHTML = `
+    <div class="detail-bar">
+      <span class="detail-title">${j.name||id}</span>
+      <span class="badge ${active?'badge-green':'badge-muted'}">${active?'aktiv':'pausiert'}</span>
+      <button class="btn btn-sm" onclick="runJob('${id}')">▶ Jetzt starten</button>
+      <button class="btn btn-sm" onclick="toggleJob('${id}',${active})">${active?'⏸ Pausieren':'▶ Aktivieren'}</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteJob('${id}')">✕ Löschen</button>
+    </div>
+    <div style="padding:.75rem 1rem;display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border)">
+      <div class="row" style="padding:.35rem 0"><span class="label">Zeitplan</span><span class="val" style="font-family:monospace">${sched}</span></div>
+      <div class="row" style="padding:.35rem 0"><span class="label">Letzter Status</span><span class="badge ${lastStatus==='ok'?'badge-green':lastStatus==='error'?'badge-red':'badge-muted'}">${lastStatus}</span></div>
+      <div class="row" style="padding:.35rem 0"><span class="label">Letzter Lauf</span><span class="val">${lastRun}</span></div>
+      <div class="row" style="padding:.35rem 0"><span class="label">Nächster Lauf</span><span class="val">${nextRun}</span></div>
+    </div>
+    <div class="detail-content">
+      <div class="field-label">Anweisung (bearbeitbar)</div>
+      <textarea class="editor" id="jobMsg" style="flex:1;min-height:200px" spellcheck="false">${msg}</textarea>
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:.75rem;margin-top:.75rem">
+        <span class="hint" id="jobSaveHint">✓ Gespeichert</span>
+        <button class="btn btn-primary btn-sm" onclick="saveJobMessage('${id}')">Anweisung speichern</button>
+      </div>
+    </div>`;
+}
+
+async function runJob(id) {
+  await api(`/api/crons/${id}/run`,{method:'POST'});
+  toast('Aufgabe gestartet');
+}
+async function toggleJob(id, active) {
+  await api(`/api/crons/${id}/${active?'disable':'enable'}`,{method:'POST'});
+  toast(active?'Pausiert':'Aktiviert');
+  await loadCronList(); selectJob(id); loadOverview();
+}
+async function deleteJob(id) {
+  if (!confirm('Aufgabe wirklich löschen?')) return;
+  await api(`/api/crons/${id}`,{method:'DELETE'});
+  toast('Gelöscht'); selectedJobId=null;
+  document.getElementById('cronDetail').innerHTML = '<div class="detail-placeholder">← Aufgabe auswählen</div>';
+  await loadCronList(); loadOverview();
+}
+async function saveJobMessage(id) {
+  const msg = document.getElementById('jobMsg')?.value;
+  if (msg===null||msg===undefined) return;
+  const r = await api(`/api/crons/${id}/message`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+  if (r.ok) {
+    const h = document.getElementById('jobSaveHint');
+    if (h) { h.classList.add('show'); setTimeout(()=>h.classList.remove('show'),2000); }
+    toast('Anweisung gespeichert');
+    const cr = await api('/api/crons?fresh=1');
+    allJobs = cr.jobs||[];
+  } else toast(r.error||'Fehler','err');
+}
+
+// ── ZUGANGSDATEN ─────────────────────────────
+async function loadEnvTable() {
+  const el = document.getElementById('envTable');
+  el.innerHTML = '<span class="loading">Lädt…</span>';
+  const en = await api('/api/env');
+  const vars = en.vars||[];
+  if (!vars.length) { el.innerHTML = '<span class="loading">Noch keine Zugangsdaten hinterlegt.</span>'; return; }
+  let h = `<div class="list-header"><span class="col-name">Name</span><span class="col-info">Wert (verborgen)</span><span class="col-actions"></span></div>`;
+  vars.forEach(v => {
+    h += `<div class="list-row">
+      <span class="col-name" style="font-family:monospace">${v.key}</span>
+      <span class="col-info">${v.preview}</span>
+      <span class="col-actions"><button class="btn btn-sm btn-danger" onclick="deleteEnv('${v.key}')">✕</button></span>
+    </div>`;
+  });
+  el.innerHTML = h;
+}
+async function saveEnv() {
+  const key = document.getElementById('envKey').value.trim();
+  const value = document.getElementById('envVal').value;
+  if (!key) { toast('Name fehlt','err'); return; }
+  await api('/api/env',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});
+  document.getElementById('envKey').value = '';
+  document.getElementById('envVal').value = '';
+  toast(`${key} gespeichert`);
+  loadEnvTable(); loadOverview();
+}
+async function deleteEnv(key) {
+  if (!confirm(`"${key}" löschen?`)) return;
+  await api(`/api/env/${key}`,{method:'DELETE'});
+  toast(`${key} gelöscht`); loadEnvTable(); loadOverview();
+}
+
+// ── DATEIEN ───────────────────────────────────
+let currentDoc = null;
+let currentDocDir = '';
+
+async function loadDocsList(dir) {
+  currentDocDir = dir||'';
+  const ws = await api('/api/workspace'+(dir?`?dir=${encodeURIComponent(dir)}`:''));
+  const files = ws.files||[];
+  const dirs = ws.dirs||[];
+  const el = document.getElementById('docsList');
+  let h = '';
+  if (dir) {
+    const parent = dir.includes('/') ? dir.substring(0,dir.lastIndexOf('/')) : '';
+    h += `<button class="sidebar-item" onclick="loadDocsList('${parent}')" style="color:var(--accent);font-size:.75rem">← zurück</button>`;
+  }
+  dirs.forEach(d => {
+    const icon = d.name==='skills'?'🛠️':d.name==='memory'?'🧠':d.name==='checklists'?'✅':'📁';
+    h += `<button class="sidebar-item" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;
+  });
+  if (!files.length && !dirs.length) { h += '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>'; }
+  files.forEach(f => {
+    h += `<button class="sidebar-item ${currentDoc===f.path?'active':''}" onclick="openDoc('${f.path}')">${f.name}</button>`;
+  });
+  el.innerHTML = h;
+}
+
+async function openDoc(path) {
+  const data = await api(`/api/workspace/file?name=${encodeURIComponent(path)}`);
+  if (data.error) { toast(data.error,'err'); return; }
+  currentDoc = path;
+  document.querySelectorAll('#docsList .sidebar-item').forEach(b => b.classList.toggle('active', b.getAttribute('onclick')===`openDoc('${path}')`));
+  document.getElementById('docsEditor').innerHTML = `
+    <div class="detail-bar">
+      <span class="detail-title" style="font-family:monospace">${path}</span>
+      <span class="hint" id="docSaveHint">✓ Gespeichert</span>
+      <button class="btn btn-primary btn-sm" onclick="saveDoc()">Speichern</button>
+    </div>
+    <textarea class="editor" id="docTextarea" style="flex:1;border:none;border-radius:0;padding:1rem" spellcheck="false">${data.content.replace(/</g,'&lt;')}</textarea>`;
+}
+
+async function saveDoc() {
+  if (!currentDoc) return;
+  const content = document.getElementById('docTextarea').value;
+  const r = await api('/api/workspace/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:currentDoc,content})});
+  if (r.ok) {
+    const h = document.getElementById('docSaveHint');
+    if (h) { h.classList.add('show'); setTimeout(()=>h.classList.remove('show'),2000); }
+    toast(`${currentDoc.split('/').pop()} gespeichert`);
+  } else toast(r.error||'Fehler','err');
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey)&&e.key==='s') { e.preventDefault(); saveDoc(); }
+});
+
+// ── INIT ──────────────────────────────────────
+async function loadAll() { await loadOverview(); }
+loadAll();
+setInterval(loadAll, 60000);
 </script>
+</body>
+</html>
