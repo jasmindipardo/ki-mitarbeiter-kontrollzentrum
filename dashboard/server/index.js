@@ -394,6 +394,98 @@ app.get('/api/openclaw/status', requireAuth, (req, res) => {
   res.json({ version, running, port });
 });
 
+
+// ─────────────────────────────────────────
+// NEUE AUFGABE ANLEGEN
+// ─────────────────────────────────────────
+app.post('/api/crons', requireAuth, (req, res) => {
+  const { name, message, schedule, timezone } = req.body;
+  if (!name || !message || !schedule) return res.status(400).json({ error: 'name, message und schedule erforderlich' });
+  const safeName = sanitizeShell(name);
+  const safeMsg = sanitizeShell(message);
+  const safeSched = sanitizeShell(schedule);
+  const safeTz = timezone ? sanitizeShell(timezone) : 'Europe/Berlin';
+  const cmd = `openclaw cron add --name "${safeName}" --message "${safeMsg}" --cron "${safeSched}" --tz "${safeTz}" --session isolated 2>&1`;
+  const result = run(cmd);
+  invalidateCronCache();
+  res.json({ ok: true, result });
+});
+
+// ─────────────────────────────────────────
+// CRON-RUNS HISTORY
+// ─────────────────────────────────────────
+app.get('/api/crons/:id/runs', requireAuth, (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Ungültige ID' });
+  const raw = run(`openclaw cron runs --id ${req.params.id} --limit 10 --json 2>/dev/null`);
+  if (!raw) return res.json({ runs: [] });
+  try { res.json(JSON.parse(raw)); }
+  catch { res.json({ runs: [], raw }); }
+});
+
+// ─────────────────────────────────────────
+// NACHRICHTEN / WAKE GATEWAY
+// ─────────────────────────────────────────
+app.post('/api/message', requireAuth, (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: 'text fehlt' });
+  const safeText = sanitizeShell(text);
+  const result = run(`openclaw cron wake --text "${safeText}" --mode now 2>&1`);
+  res.json({ ok: true, result });
+});
+
+// ─────────────────────────────────────────
+// DIENSTE / SERVER-SERVICES
+// ─────────────────────────────────────────
+app.get('/api/services', requireAuth, (req, res) => {
+  const { execSync } = require('child_process');
+  const services = [
+    { name: 'KI-Assistent (OpenClaw)', check: () => { const h = run('curl -s --max-time 2 http://localhost:18789/health'); return h && h.includes('"ok":true') ? 'online' : 'offline'; }, url: null, info: 'Dein persönlicher KI-Assistent' },
+    { name: 'Kontrollzentrum', check: () => 'online', url: `http://${run('tailscale ip -4')}:7433`, info: 'Dieses Dashboard' },
+    { name: 'Analytics (Umami)', check: () => { const h = run('curl -s --max-time 2 http://localhost:3000/api/heartbeat'); return h ? 'online' : 'offline'; }, url: 'https://analytics.jasmindipardo.de', info: 'Website-Besucher-Statistiken' },
+    { name: 'Caddy (Webserver)', check: () => { const r = run('systemctl is-active caddy 2>/dev/null'); return r === 'active' ? 'online' : 'offline'; }, url: null, info: 'Verwaltet alle Web-Adressen' },
+    { name: 'Tailscale (VPN)', check: () => { const ip = run('tailscale ip -4 2>/dev/null'); return ip ? 'online' : 'offline'; }, url: null, info: `IP: ${run('tailscale ip -4 2>/dev/null') || '–'}` },
+    { name: 'Docker (Container)', check: () => { const r = run('docker ps --format "{{.Names}}" 2>/dev/null'); return r ? 'online' : 'offline'; }, url: null, info: run('docker ps --format "{{.Names}}" 2>/dev/null') || 'keine Container' },
+  ];
+  const result = services.map(s => {
+    try { return { ...s, status: s.check(), check: undefined }; }
+    catch { return { name: s.name, status: 'offline', url: s.url, info: s.info }; }
+  });
+  res.json({ services: result });
+});
+
+// ─────────────────────────────────────────
+// LOGS (letzte Zeilen aus OpenClaw-Log)
+// ─────────────────────────────────────────
+app.get('/api/logs', requireAuth, (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const logFile = `/tmp/openclaw/openclaw-${today}.log`;
+  const lines = parseInt(req.query.lines) || 30;
+  const raw = run(`tail -${lines} "${logFile}" 2>/dev/null`);
+  if (!raw) return res.json({ logs: [] });
+  // JSON-Log-Zeilen parsen
+  const logs = raw.split('\n').filter(Boolean).map(line => {
+    try {
+      const obj = JSON.parse(line);
+      return {
+        time: obj.time ? new Date(obj.time).toLocaleTimeString('de-DE') : '–',
+        level: obj._meta?.logLevelName || 'INFO',
+        msg: obj['0'] || ''
+      };
+    } catch {
+      return { time: '–', level: 'INFO', msg: line.slice(0, 200) };
+    }
+  }).filter(l => l.msg.trim());
+  res.json({ logs: logs.slice(-lines) });
+});
+
+// ─────────────────────────────────────────
+// GATEWAY NEUSTART
+// ─────────────────────────────────────────
+app.post('/api/restart', requireAuth, (req, res) => {
+  res.json({ ok: true, message: 'Neustart wird ausgeführt…' });
+  setTimeout(() => { run('openclaw gateway restart 2>/dev/null || pkill -f openclaw-gateway && sleep 2 && openclaw-gateway &'); }, 500);
+});
+
 // ─────────────────────────────────────────
 // CATCH-ALL
 // ─────────────────────────────────────────
