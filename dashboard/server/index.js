@@ -554,7 +554,7 @@ app.get('/api/logs', requireAuth, (req, res) => {
       lines.forEach(line => {
         if (line.startsWith('## ')) {
           const h = line.slice(3).trim();
-          if (h.includes('Weitermachen')) return;
+          if (h.includes('Weitermachen')) { curSection = 'SKIP'; return; }
           const mezM = h.match(/\((\d{1,2}:\d{2})\s*MEZ\)/);
           const utcM = h.match(/(\d{1,2}:\d{2})\s*UTC/);
           curTime = mezM ? mezM[1] + ' Uhr' : utcM ? utcM[1] + ' UTC' : '';
@@ -565,6 +565,8 @@ app.get('/api/logs', requireAuth, (req, res) => {
           const sub = line.slice(4).trim();
           if (sub && !sub.includes('Bewusst') && sub.length > 2)
             entries.push({ date: dateStr, time: curTime, type: 'sub', text: sub });
+        } else if (curSection === 'SKIP') {
+          return; // Weitermachen-Block überspringen
         } else if (/^\s*[-*]\s/.test(line) && line.includes('86c8')) {
           const t = line.replace(/^\s*[-*]\s*/, '').trim().slice(0, 90);
           if (t) entries.push({ date: dateStr, time: curTime, type: 'task', text: t });
