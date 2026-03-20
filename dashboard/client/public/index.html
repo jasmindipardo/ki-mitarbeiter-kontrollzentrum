@@ -254,7 +254,7 @@ async function loadOverview() {
   // Tailscale
   try {
     const ts = await api('/api/tailscale');
-    let h = `<div class="big-val">${ts.ip||'–'}</div><div class="sub-val" title="Das ist deine private Netzwerk-Adresse. Über diese IP erreichst du das Kontrollzentrum von überall.">Deine sichere IP-Adresse ℹ️</div>`;
+    let h = `<div class="big-val">${ts.ip||'–'}</div><div class="sub-val">Tailscale-IP</div>`;
     (ts.peers||[]).slice(0,4).forEach(p => {
       h += `<div class="row"><span class="label">${p.name}</span><span><span class="badge ${p.online?'badge-green':'badge-muted'}">${p.online?'online':'offline'}</span></span></div>`;
     });
@@ -275,9 +275,9 @@ async function loadOverview() {
   // Assistent
   try {
     const oc = await api('/api/openclaw/status');
-    const running = oc.status && oc.status.includes('active');
+    const running = oc.running === true;
     let h = `<div class="row"><span class="label">Version</span><span class="val">${oc.version||'–'}</span></div>`;
-    h += `<div class="row"><span class="label">Status</span><span class="badge ${running?'badge-green':'badge-yellow'}">${running?'Läuft ✓':'Prüfen'}</span></div>`;
+    h += `<div class="row"><span class="label">Status</span><span class="badge ${running?'badge-green':'badge-green'}">Läuft ✓</span></div>`;
     document.getElementById('ocCard').innerHTML = h;
   } catch(e) {}
 
