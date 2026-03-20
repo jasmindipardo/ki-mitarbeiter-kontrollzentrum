@@ -1,4 +1,4 @@
-# 🎛️ KI-Team Dashboard
+# 🎛️ KI-Mitarbeiter Kontrollzentrum
 
 Ein vollständiges, abgesichertes Web-Dashboard für deinen KI-Assistenten – erreichbar über Tailscale von überall.
 
@@ -79,7 +79,7 @@ sudo nano /etc/systemd/system/ki-dashboard.service
 
 ```ini
 [Unit]
-Description=KI-Team Dashboard
+Description=KI-Mitarbeiter Kontrollzentrum
 After=network.target tailscaled.service
 
 [Service]

@@ -388,7 +388,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
   console.log('');
   console.log('╔══════════════════════════════════════════════╗');
-  console.log('║       🎛️  KI-Team Dashboard gestartet!       ║');
+  console.log('║       🎛️  KI-Mitarbeiter Kontrollzentrum gestartet!       ║');
   console.log('╠══════════════════════════════════════════════╣');
   console.log(`║  Lokal:     ${localUrl.padEnd(34)}║`);
   if (tsUrl) {

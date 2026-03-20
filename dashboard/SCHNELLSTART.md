@@ -1,4 +1,4 @@
-# 🚀 Schnellstart – KI-Team Dashboard
+# 🚀 Schnellstart – KI-Mitarbeiter Kontrollzentrum
 
 ## Einmalige Einrichtung (5 Minuten)
 

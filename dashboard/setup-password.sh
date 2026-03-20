@@ -1,11 +1,11 @@
 #!/bin/bash
-# Passwort für das KI-Team Dashboard einrichten
+# Passwort für das KI-Mitarbeiter Kontrollzentrum einrichten
 # Ausführen mit: bash setup-password.sh
 
 CONFIG_DIR="$HOME/.openclaw"
 PW_FILE="$CONFIG_DIR/dashboard.password"
 
-echo "🔒 KI-Team Dashboard – Passwort einrichten"
+echo "🔒 KI-Mitarbeiter Kontrollzentrum – Passwort einrichten"
 echo ""
 
 if [ -f "$PW_FILE" ]; then

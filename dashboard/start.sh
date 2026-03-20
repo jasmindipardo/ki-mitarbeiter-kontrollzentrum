@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────
-# KI-Team Dashboard – Einfacher Start
+# KI-Mitarbeiter Kontrollzentrum – Einfacher Start
 # Einfach ausführen: bash start.sh
 # ─────────────────────────────────────────────
 
@@ -14,7 +14,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo ""
-echo -e "${CYAN}🎛️  KI-Team Dashboard wird gestartet...${NC}"
+echo -e "${CYAN}🎛️  KI-Mitarbeiter Kontrollzentrum wird gestartet...${NC}"
 echo ""
 
 # Node.js prüfen

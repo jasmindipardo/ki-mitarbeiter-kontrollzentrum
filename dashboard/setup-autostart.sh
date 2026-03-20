@@ -7,14 +7,14 @@ SERVICE_FILE="/etc/systemd/system/ki-dashboard.service"
 CURRENT_USER="${SUDO_USER:-$USER}"
 USER_HOME=$(eval echo "~$CURRENT_USER")
 
-echo "🔧 Autostart für KI-Team Dashboard einrichten..."
+echo "🔧 Autostart für KI-Mitarbeiter Kontrollzentrum einrichten..."
 echo "   Benutzer: $CURRENT_USER"
 echo "   Pfad: $SCRIPT_DIR"
 echo ""
 
 cat > "$SERVICE_FILE" << SERVICEEOF
 [Unit]
-Description=KI-Team Dashboard (jasmindipardo.de)
+Description=KI-Mitarbeiter Kontrollzentrum (jasmindipardo.de)
 After=network.target tailscaled.service
 
 [Service]
