@@ -365,7 +365,7 @@ async function loadOverview() {
       h+=`<div class="row"><span class="label">${p.name}</span><span class="badge ${p.online?'badge-green':'badge-muted'}">${p.online?'online':'offline'}</span></div>`;
     });
     if(!(ts.peers||[]).length) h+=`<div class="row"><span class="label" style="font-style:italic">Keine weiteren Geräte verbunden</span></div>`;
-    document.getElementById('tsCard').innerHTML=h;
+    softUpdate('tsCard',h);
   } catch(e) { document.getElementById('tsCard').innerHTML='<span class="loading">Nicht erreichbar</span>'; }
 
   try {
@@ -374,14 +374,14 @@ async function loadOverview() {
     [['Servername',sys.hostname],['Laufzeit',sys.uptime],['Arbeitsspeicher',sys.mem],['Festplatte',sys.disk],['Version',sys.version]].forEach(([l,v])=>{
       if(v) h+=`<div class="row"><span class="label">${l}</span><span class="val">${v}</span></div>`;
     });
-    document.getElementById('sysCard').innerHTML=h;
+    softUpdate('sysCard',h);
   } catch(e) {}
 
   try {
     const oc = await api('/api/openclaw/status');
     let h=`<div class="row"><span class="label">Version</span><span class="val">${oc.version||'–'}</span></div>`;
     h+=`<div class="row"><span class="label">Status</span><span class="badge badge-green">Läuft ✓</span></div>`;
-    document.getElementById('ocCard').innerHTML=h;
+    softUpdate('ocCard',h);
   } catch(e) {}
 
   // Aktuelle Aktivität
@@ -406,7 +406,7 @@ async function loadOverview() {
         h += '</div>';
       }
     }
-    document.getElementById('activityCard').innerHTML = h;
+    softUpdate('activityCard',h);
   } catch(e) {}
 
   try {
@@ -417,7 +417,7 @@ async function loadOverview() {
     jobs.slice(0,4).forEach(j=>{
       h+=`<div class="row"><span class="label">${j.name||j.id||'Job'}</span><span class="badge ${j.enabled!==false?'badge-green':'badge-muted'}">${j.enabled!==false?'aktiv':'pausiert'}</span></div>`;
     });
-    document.getElementById('cronSummary').innerHTML=h;
+    softUpdate('cronSummary',h);
   } catch(e) {}
 
   try {
@@ -427,7 +427,7 @@ async function loadOverview() {
     vars.slice(0,5).forEach(v=>{
       h+=`<div class="row"><span class="label" style="font-family:monospace">${v.key}</span><span class="val" style="color:var(--muted)">${v.preview}</span></div>`;
     });
-    document.getElementById('envSummary').innerHTML=h;
+    softUpdate('envSummary',h);
   } catch(e) {}
 
   try {
@@ -438,7 +438,7 @@ async function loadOverview() {
       const d=new Date(f.modified).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
       h+=`<div class="row"><span class="label" style="font-family:monospace">${f.name}</span><span class="val" style="color:var(--muted)">${d}</span></div>`;
     });
-    document.getElementById('wsSummary').innerHTML=h;
+    softUpdate('wsSummary',h);
   } catch(e) {}
 
   document.getElementById('headerSub').textContent=`Zuletzt: ${new Date().toLocaleTimeString('de-DE')}`;
@@ -657,7 +657,11 @@ async function loadLogs(){
   const logs=data.logs||[];
   if(!logs.length){el.innerHTML='<div style="padding:1rem;color:var(--muted)">Noch keine Aktivitäten in den letzten 24h</div>';return;}
 
-  let h='<div style="max-height:600px;overflow-y:auto">';
+  // Scroll-Position merken
+  const logsDiv = el.querySelector('div[style*="overflow"]');
+  const scrollTop = logsDiv ? logsDiv.scrollTop : 0;
+
+  let h='<div style="max-height:600px;overflow-y:auto" id="logsScroll">';
   let lastDate='';
   logs.forEach(l=>{
     if(l.date && l.date !== lastDate){
@@ -679,6 +683,9 @@ async function loadLogs(){
   });
   h+='</div>';
   el.innerHTML=h;
+  // Scroll-Position wiederherstellen
+  const newScroll = el.querySelector('#logsScroll');
+  if (newScroll && scrollTop) newScroll.scrollTop = scrollTop;
 }
 
 // ── NACHRICHT / SCHNELLBEFEHLE ───────────────
@@ -694,11 +701,17 @@ async function quickSend(text){
   toast(r.ok?'Gesendet ✓':r.error||'Fehler',r.ok?'ok':'err');
 }
 
+// Sanftes Update: nur wenn Inhalt sich geändert hat
+function softUpdate(id, html) {
+  const el = document.getElementById(id);
+  if (el && el.innerHTML !== html) el.innerHTML = html;
+}
+
 // ── INIT ─────────────────────────────────────
 let _logsTimer = null;
 function startLogsAutoRefresh() {
   stopLogsAutoRefresh();
-  _logsTimer = setInterval(loadLogs, 8000);
+  _logsTimer = setInterval(loadLogs, 10000);
 }
 function stopLogsAutoRefresh() {
   if (_logsTimer) { clearInterval(_logsTimer); _logsTimer = null; }
@@ -706,8 +719,7 @@ function stopLogsAutoRefresh() {
 
 async function loadAll(){ await loadOverview(); }
 loadAll();
-// Übersicht alle 10 Sek aktualisieren (statt 60)
-setInterval(loadAll, 10000);
+setInterval(loadAll, 15000);
 </script>
 </body>
 </html>
