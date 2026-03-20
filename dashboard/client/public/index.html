@@ -161,10 +161,17 @@
 </div>
 
 <!-- ── CRON JOBS ─────────────────────────────────── -->
-<div id="page-crons" class="page">
-  <div class="card">
-    <div class="card-title">⏰ Automatische Aufgaben verwalten</div>
-    <div id="cronTable"><span class="loading">Lädt…</span></div>
+<div id="page-crons" class="page" style="display:none">
+  <div style="display:flex;gap:1.25rem;height:calc(100vh - 160px)">
+    <!-- Liste links -->
+    <div style="width:260px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow-y:auto">
+      <div class="sidebar-title">Aufgaben</div>
+      <div id="cronList"></div>
+    </div>
+    <!-- Detail rechts -->
+    <div id="cronDetail" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:2rem;color:var(--muted);text-align:center;margin:auto">← Aufgabe auswählen</div>
+    </div>
   </div>
 </div>
 
@@ -289,52 +296,107 @@ async function loadOverview() {
   document.getElementById('headerSub').textContent = `Zuletzt: ${new Date().toLocaleTimeString('de-DE')}`;
 }
 
-// ── CRON TABLE ───────────────────────────────────
+// ── CRON LIST + DETAIL ───────────────────────────
+let allCronJobs = [];
+let selectedCronId = null;
+
 async function loadCronTable() {
-  const el = document.getElementById('cronTable');
-  el.innerHTML = '<span class="loading">Lädt…</span>';
-  const cr = await api('/api/crons');
-  const jobs = cr.jobs || cr || [];
-  if (!Array.isArray(jobs) || !jobs.length) {
-    el.innerHTML = '<span class="loading">Keine Cron Jobs gefunden.</span>';
-    return;
-  }
-  let html = `<div class="list-header"><span class="col-name">Name / ID</span><span class="col-info">Zeitplan</span><span class="col-status">Status</span><span class="col-actions">Aktionen</span></div>`;
-  jobs.forEach(j => {
-    const id = j.id || j.jobId || '';
-    const name = j.name || id || 'Job';
-    const sched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : j.schedule?.kind || '–');
+  const cr = await api('/api/crons?fresh=1');
+  allCronJobs = cr.jobs || cr || [];
+  renderCronList();
+}
+
+function renderCronList() {
+  const el = document.getElementById('cronList');
+  if (!el) return;
+  if (!allCronJobs.length) { el.innerHTML = '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.8rem">Keine Aufgaben</div>'; return; }
+  el.innerHTML = allCronJobs.map(j => {
+    const id = j.id || '';
+    const name = j.name || id;
     const active = j.enabled !== false;
-    html += `<div class="list-row">
-      <span class="col-name" title="${id}">${name}</span>
-      <span class="col-info">${sched}</span>
-      <span class="col-status"><span class="badge ${active ? 'badge-green' : 'badge-muted'}">${active ? 'aktiv' : 'pausiert'}</span></span>
-      <span class="col-actions">
-        <button class="btn btn-sm" onclick="runCron('${id}')">▶ Run</button>
-        <button class="btn btn-sm" onclick="toggleCron('${id}', ${active})">${active ? '⏸' : '▶'}</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteCron('${id}')">✕</button>
+    return `<button class="sidebar-file ${selectedCronId === id ? 'active' : ''}" onclick="selectCron('${id}')">
+      <span style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <span>${name}</span>
+        <span class="badge ${active ? 'badge-green' : 'badge-muted'}" style="font-size:.65rem">${active ? '●' : '○'}</span>
       </span>
+    </button>`;
+  }).join('');
+}
+
+function selectCron(id) {
+  selectedCronId = id;
+  renderCronList();
+  const j = allCronJobs.find(j => (j.id || '') === id);
+  if (!j) return;
+
+  const active = j.enabled !== false;
+  const sched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : '–');
+  const message = j.payload?.message || j.payload?.text || '';
+  const lastRun = j.state?.lastRunAtMs ? new Date(j.state.lastRunAtMs).toLocaleString('de-DE') : '–';
+  const nextRun = j.state?.nextRunAtMs ? new Date(j.state.nextRunAtMs).toLocaleString('de-DE') : '–';
+
+  document.getElementById('cronDetail').innerHTML = `
+    <div class="editor-bar">
+      <span class="editor-filename">${j.name || id}</span>
+      <span class="badge ${active ? 'badge-green' : 'badge-muted'}">${active ? 'aktiv' : 'pausiert'}</span>
+      <div class="editor-actions">
+        <button class="btn btn-sm" onclick="runCron('${id}')">▶ Jetzt starten</button>
+        <button class="btn btn-sm" onclick="toggleCron('${id}', ${active})">${active ? '⏸ Pausieren' : '▶ Aktivieren'}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCron('${id}')">✕ Löschen</button>
+      </div>
+    </div>
+    <div style="padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;border-bottom:1px solid var(--border)">
+      <div class="row"><span class="label">Zeitplan</span><span class="val" style="font-family:monospace">${sched}</span></div>
+      <div class="row"><span class="label">Letzter Lauf</span><span class="val">${lastRun}</span></div>
+      <div class="row"><span class="label">Nächster Lauf</span><span class="val">${nextRun}</span></div>
+      <div class="row"><span class="label">ID</span><span class="val" style="font-size:.75rem;color:var(--muted)">${id}</span></div>
+    </div>
+    <div style="padding:1rem;flex:1;display:flex;flex-direction:column">
+      <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.5rem">Anweisung (bearbeitbar)</div>
+      <textarea id="cronMsg" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.75rem;font-size:.82rem;line-height:1.6;resize:none;outline:none;font-family:inherit" spellcheck="false">${message}</textarea>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem;justify-content:flex-end">
+        <span id="cronSaveHint" style="font-size:.75rem;color:var(--green);opacity:0;transition:opacity .3s;align-self:center">✓ Gespeichert</span>
+        <button class="btn btn-primary btn-sm" onclick="saveCronMessage('${id}')">Anweisung speichern</button>
+      </div>
     </div>`;
-  
-  el.innerHTML = html;
+}
+
+async function saveCronMessage(id) {
+  const msg = document.getElementById('cronMsg')?.value;
+  if (!msg) return;
+  const r = await api(`/api/crons/${id}/message`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ message: msg })
+  });
+  if (r.ok) {
+    const hint = document.getElementById('cronSaveHint');
+    if (hint) { hint.style.opacity = '1'; setTimeout(() => hint.style.opacity = '0', 2000); }
+    toast('Anweisung gespeichert');
+    await loadCronTable();
+    selectCron(id);
+  } else toast(r.error || 'Fehler beim Speichern', 'err');
 }
 
 async function toggleCron(id, active) {
-  const r = await api(`/api/crons/${id}/${active ? 'disable' : 'enable'}`, { method: 'POST' 
-  toast(active ? 'Job pausiert' : 'Job aktiviert');
-  loadCronTable();
+  await api(`/api/crons/${id}/${active ? 'disable' : 'enable'}`, { method: 'POST' });
+  toast(active ? 'Aufgabe pausiert' : 'Aufgabe aktiviert');
+  await loadCronTable();
+  if (selectedCronId === id) selectCron(id);
   loadOverview();
 }
 async function deleteCron(id) {
-  if (!confirm(`Job "${id}" wirklich löschen?`)) return;
-  await api(`/api/crons/${id}`, { method: 'DELETE' 
-  toast('Job gelöscht');
-  loadCronTable();
+  if (!confirm(`Aufgabe wirklich löschen?`)) return;
+  await api(`/api/crons/${id}`, { method: 'DELETE' });
+  toast('Aufgabe gelöscht');
+  selectedCronId = null;
+  document.getElementById('cronDetail').innerHTML = '<div style="padding:2rem;color:var(--muted);text-align:center;margin:auto">← Aufgabe auswählen</div>';
+  await loadCronTable();
   loadOverview();
 }
 async function runCron(id) {
-  await api(`/api/crons/${id}/run`, { method: 'POST' 
-  toast(`Job "${id}" manuell gestartet`);
+  await api(`/api/crons/${id}/run`, { method: 'POST' });
+  toast(`Aufgabe gestartet`);
 }
 
 // ── ENV TABLE ────────────────────────────────────

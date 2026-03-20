@@ -264,6 +264,17 @@ app.post('/api/crons/:id/run', requireAuth, (req, res) => {
   res.json({ ok: true, result });
 });
 
+// Cron-Nachricht (Anweisung) aktualisieren
+app.post('/api/crons/:id/message', requireAuth, (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Ungültige Job-ID' });
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'message fehlt' });
+  const safeMsg = sanitizeShell(message);
+  const result = run(`openclaw cron update ${req.params.id} --message "${safeMsg}" 2>&1`);
+  invalidateCronCache();
+  res.json({ ok: true, result });
+});
+
 // ─────────────────────────────────────────
 // ENV VARIABLEN – lesen, setzen, löschen
 // ─────────────────────────────────────────
