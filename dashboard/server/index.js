@@ -594,6 +594,16 @@ app.get('/api/logs', requireAuth, (req, res) => {
     }
   } catch {}
 
+  // Korrekte Sortierung: neueste zuerst, nach Datum + UTC-Zeit im Header
+  entries.sort((a, b) => {
+    if (a.sortMs || b.sortMs) return (b.sortMs||0) - (a.sortMs||0);
+    const dateCompare = (b.date||'').localeCompare(a.date||'');
+    if (dateCompare !== 0) return dateCompare;
+    // Zeitvergleich: "21:11 Uhr" vs "03:00 Uhr" - numerisch
+    const ta = parseInt((a.time||'0').replace(/[^0-9]/g,'')) || 0;
+    const tb = parseInt((b.time||'0').replace(/[^0-9]/g,'')) || 0;
+    return tb - ta;
+  });
   res.json({ logs: entries.slice(0, 100) });
 });
 
