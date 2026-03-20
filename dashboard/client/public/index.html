@@ -558,11 +558,26 @@ function renderDocsList(files, dirs, dir) {
   el.innerHTML=h;
 }
 
+let searchTimer = null;
 function filterDocs(q) {
   if (!q.trim()) { renderDocsList(allDocsData.files, allDocsData.dirs, allDocsData.dir); return; }
-  const lq = q.toLowerCase();
-  const filtered = allDocsData.files.filter(f => f.name.toLowerCase().includes(lq) || f.path.toLowerCase().includes(lq));
-  renderDocsList(filtered, [], allDocsData.dir ? allDocsData.dir : '');
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const el = document.getElementById('docsList');
+    el.innerHTML = '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Suche…</div>';
+    const data = await api(`/api/search?q=${encodeURIComponent(q)}`);
+    const results = data.results || [];
+    if (!results.length) { el.innerHTML = '<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Treffer</div>'; return; }
+    let h = `<div style="padding:.4rem 1rem;font-size:.72rem;color:var(--muted);border-bottom:1px solid var(--border)">${results.length} Treffer</div>`;
+    results.forEach(r => {
+      h += `<button class="sitem ${curDoc===r.path?'active':''}" onclick="openDoc('${r.path}')" style="display:block">
+        <span style="font-weight:500">${r.name}</span>
+        <span style="display:block;font-size:.72rem;color:var(--muted);margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.path}</span>
+        ${r.snippet ? `<span style="display:block;font-size:.71rem;color:var(--muted);margin-top:.15rem;white-space:normal;line-height:1.4">${r.snippet}</span>` : ''}
+      </button>`;
+    });
+    el.innerHTML = h;
+  }, 300);
 }
 async function openDoc(path){
   const data=await api(`/api/workspace/file?name=${encodeURIComponent(path)}`);

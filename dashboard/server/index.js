@@ -497,6 +497,49 @@ app.post('/api/restart', requireAuth, (req, res) => {
 });
 
 // ─────────────────────────────────────────
+// VOLLTEXT-SUCHE (Dateiname + Inhalt)
+// ─────────────────────────────────────────
+app.get('/api/search', requireAuth, (req, res) => {
+  const q = (req.query.q || '').toLowerCase().trim();
+  if (!q || q.length < 2) return res.json({ results: [] });
+
+  const results = [];
+  function searchDir(dir, relPath) {
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const e of entries) {
+        if (e.name.startsWith('.') || ['node_modules','__pycache__'].includes(e.name)) continue;
+        const fullPath = path.join(dir, e.name);
+        const filePath = relPath ? `${relPath}/${e.name}` : e.name;
+        if (e.isDirectory()) {
+          searchDir(fullPath, filePath);
+        } else if (e.name.endsWith('.md') || e.name.endsWith('.json')) {
+          const nameMatch = e.name.toLowerCase().includes(q);
+          let contentMatch = false;
+          let snippet = '';
+          try {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const idx = content.toLowerCase().indexOf(q);
+            if (idx !== -1) {
+              contentMatch = true;
+              const start = Math.max(0, idx - 40);
+              const end = Math.min(content.length, idx + q.length + 60);
+              snippet = '…' + content.slice(start, end).replace(/\n/g, ' ') + '…';
+            }
+          } catch {}
+          if (nameMatch || contentMatch) {
+            results.push({ name: e.name, path: filePath, nameMatch, snippet });
+            if (results.length >= 30) return; // Limit
+          }
+        }
+      }
+    } catch {}
+  }
+  searchDir(WS_PATH, '');
+  res.json({ results });
+});
+
+// ─────────────────────────────────────────
 // CATCH-ALL
 // ─────────────────────────────────────────
 app.get('*', (req, res) => {
