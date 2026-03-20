@@ -399,6 +399,11 @@ async function loadOverview() {
         act.topics.forEach(t => { h += `<div style="font-size:.8rem;color:var(--muted);padding:.15rem 0;border-top:1px solid rgba(51,65,85,.4)">· ${t}</div>`; });
         h += '</div>';
       }
+      if (act.liveItems && act.liveItems.length) {
+        h += `<div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)"><div class="field-label" style="margin-bottom:.35rem">Live-Aktivität</div>`;
+        act.liveItems.forEach(i => { h += `<div style="font-size:.8rem;color:var(--text);padding:.15rem 0;border-top:1px solid rgba(51,65,85,.4)"><span style="color:var(--muted);margin-right:.5rem">${i.time}</span>${i.text}</div>`; });
+        h += '</div>';
+      }
     }
     document.getElementById('activityCard').innerHTML = h;
   } catch(e) {}
@@ -647,14 +652,13 @@ async function loadServices(){
 async function loadLogs(){
   const el=document.getElementById('logsContent');
   el.innerHTML='<span class="loading">Lädt…</span>';
-  const data=await api('/api/logs?lines=40');
+  const data=await api('/api/logs?lines=60');
   const logs=data.logs||[];
-  if(!logs.length){el.innerHTML='<span class="loading">Keine Einträge gefunden</span>';return;}
+  if(!logs.length){el.innerHTML='<div style="padding:1rem;color:var(--muted)">Noch keine Aktivitäten heute</div>';return;}
   let h=`<div style="max-height:500px;overflow-y:auto">`;
-  logs.reverse().forEach(l=>{
-    const isErr=l.level==='ERROR';
-    if(!l.msg.trim())return;
-    h+=`<div class="log-line"><span class="log-time">${l.time}</span><span class="log-msg ${isErr?'log-err':''}">${l.msg}</span></div>`;
+  logs.forEach(l=>{
+    const isErr=l.level==='ERROR'||l.text?.includes('⚠️');
+    h+=`<div class="log-line"><span class="log-time">${l.time}</span><span class="log-msg ${isErr?'log-err':''}">${l.text||l.msg}</span></div>`;
   });
   h+='</div>';
   el.innerHTML=h;

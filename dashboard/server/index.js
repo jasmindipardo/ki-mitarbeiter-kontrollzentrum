@@ -450,7 +450,24 @@ app.get('/api/activity', requireAuth, (req, res) => {
     }
   } catch {}
 
-  res.json({ ...activity, activeSessions });
+  // Letzte 5 vereinfachte Log-Einträge für Live-Anzeige
+  const todayLog = `/tmp/openclaw/openclaw-${today}.log`;
+  const rawLog = run(`tail -n 30 "${todayLog}" 2>/dev/null`);
+  const liveItems = [];
+  if (rawLog) {
+    rawLog.split('\n').filter(Boolean).reverse().forEach(line => {
+      try {
+        const obj = JSON.parse(line);
+        const msg = obj['0'] || '';
+        const time = obj.time ? new Date(obj.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}) : '';
+        if (msg.includes('inbound') || msg.includes('Inbound')) liveItems.push({time, text:'📨 Nachricht empfangen'});
+        else if (msg.includes('agentTurn') || msg.includes('agent turn')) liveItems.push({time, text:'🤖 Aufgabe ausgeführt'});
+        else if (msg.includes('cron') && msg.includes('trigger')) liveItems.push({time, text:'⏰ Cron-Job ausgeführt'});
+      } catch {}
+    });
+  }
+
+  res.json({ ...activity, activeSessions, liveItems: liveItems.slice(0,5) });
 });
 
 // ─────────────────────────────────────────
@@ -519,23 +536,54 @@ app.get('/api/services', requireAuth, (req, res) => {
 app.get('/api/logs', requireAuth, (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   const logFile = `/tmp/openclaw/openclaw-${today}.log`;
-  const lines = parseInt(req.query.lines) || 30;
-  const raw = run(`tail -${lines} "${logFile}" 2>/dev/null`);
+  const lines = parseInt(req.query.lines) || 60;
+  const raw = run(`tail -n ${lines * 3} "${logFile}" 2>/dev/null`);
   if (!raw) return res.json({ logs: [] });
-  // JSON-Log-Zeilen parsen
-  const logs = raw.split('\n').filter(Boolean).map(line => {
+
+  // Log-Einträge parsen und in lesbares Deutsch übersetzen
+  function simplify(msg) {
+    if (!msg || !msg.trim()) return null;
+    const m = msg.trim();
+    // Bekannte Muster → lesbarer Text
+    if (m.includes('Listening:')) return { type: 'system', text: '🟢 Assistent gestartet' };
+    if (m.includes('RPC probe: ok')) return { type: 'system', text: '✅ Verbindung OK' };
+    if (m.includes('heartbeat') || m.includes('HEARTBEAT_OK')) return null; // überspringen
+    if (m.includes('inbound message') || m.includes('Inbound')) return { type: 'message', text: '📨 Nachricht empfangen' };
+    if (m.includes('cron') && m.includes('trigger')) return { type: 'cron', text: '⏰ Automatische Aufgabe gestartet' };
+    if (m.includes('session') && m.includes('start')) return { type: 'session', text: '💬 Neue Session gestartet' };
+    if (m.includes('tool call') || m.includes('tool_call')) return { type: 'work', text: '🔧 Werkzeug aufgerufen' };
+    if (m.includes('memory') || m.includes('Memory')) return { type: 'memory', text: '🧠 Memory aktualisiert' };
+    if (m.includes('ClickUp')) return { type: 'work', text: '📋 ClickUp-Aktion ausgeführt' };
+    if (m.includes('Slack') || m.includes('slack')) return { type: 'message', text: '💬 Slack-Nachricht verarbeitet' };
+    if (m.includes('Telegram') || m.includes('telegram')) return { type: 'message', text: '💬 Telegram-Nachricht verarbeitet' };
+    if (m.includes('cron job') || m.includes('Job')) return { type: 'cron', text: '⏰ Aufgabe ausgeführt' };
+    if (m.includes('ERROR') || m.includes('error')) return { type: 'error', text: '⚠️ Fehler aufgetreten' };
+    if (m.includes('agent turn') || m.includes('agentTurn')) return { type: 'work', text: '🤖 Arbeite an einer Aufgabe…' };
+    if (m.includes('Gateway') || m.includes('gateway')) return { type: 'system', text: '⚙️ System-Status Update' };
+    // Kurze, informative Zeilen direkt zeigen
+    if (m.length < 80 && !m.includes('{') && !m.includes('subsystem')) {
+      return { type: 'info', text: m };
+    }
+    return null;
+  }
+
+  const seen = new Set();
+  const logs = raw.split('\n').filter(Boolean).reverse().map(line => {
     try {
       const obj = JSON.parse(line);
-      return {
-        time: obj.time ? new Date(obj.time).toLocaleTimeString('de-DE') : '–',
-        level: obj._meta?.logLevelName || 'INFO',
-        msg: obj['0'] || ''
-      };
-    } catch {
-      return { time: '–', level: 'INFO', msg: line.slice(0, 200) };
-    }
-  }).filter(l => l.msg.trim());
-  res.json({ logs: logs.slice(-lines) });
+      const time = obj.time ? new Date(obj.time).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) : '–';
+      const level = obj._meta?.logLevelName || 'INFO';
+      const msg = obj['0'] || '';
+      const simple = simplify(msg);
+      if (!simple) return null;
+      const key = simple.text;
+      if (seen.has(key)) return null; // Duplikate entfernen
+      seen.add(key);
+      return { time, level, ...simple };
+    } catch { return null; }
+  }).filter(Boolean).slice(0, 20);
+
+  res.json({ logs: logs.reverse() });
 });
 
 // ─────────────────────────────────────────
