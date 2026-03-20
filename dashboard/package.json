@@ -1,0 +1,17 @@
+{
+  "name": "ki-team-dashboard",
+  "version": "1.0.0",
+  "description": "KI-Team Dashboard – für den Kurs ",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.4.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
