@@ -139,6 +139,7 @@
     <div class="card"><div class="card-title">🔒 Verbindung</div><div id="tsCard"><span class="loading">Lädt…</span></div></div>
     <div class="card"><div class="card-title">💻 Server-Status</div><div id="sysCard"><span class="loading">Lädt…</span></div></div>
     <div class="card"><div class="card-title">🤖 Assistent</div><div id="ocCard"><span class="loading">Lädt…</span></div></div>
+    <div class="card" style="grid-column:span 2"><div class="card-title">🎯 Aktuell aktiv – was ich heute gemacht habe</div><div id="activityCard"><span class="loading">Lädt…</span></div></div>
     <div class="card"><div class="card-title">⏰ Automatische Aufgaben</div><div id="cronSummary"><span class="loading">Lädt…</span></div></div>
     <div class="card"><div class="card-title">🔑 Zugangsdaten</div><div id="envSummary"><span class="loading">Lädt…</span></div></div>
     <div class="card"><div class="card-title">📝 Meine Dateien</div><div id="wsSummary"><span class="loading">Lädt…</span></div></div>
@@ -380,6 +381,26 @@ async function loadOverview() {
     let h=`<div class="row"><span class="label">Version</span><span class="val">${oc.version||'–'}</span></div>`;
     h+=`<div class="row"><span class="label">Status</span><span class="badge badge-green">Läuft ✓</span></div>`;
     document.getElementById('ocCard').innerHTML=h;
+  } catch(e) {}
+
+  // Aktuelle Aktivität
+  try {
+    const act = await api('/api/activity');
+    let h = '';
+    if (!act.hasToday) {
+      h = '<span class="loading">Noch keine Aktivität heute</span>';
+    } else {
+      h += `<div class="row"><span class="label">Heutiger Stand</span><span class="val">${act.lines} Zeilen Memory</span></div>`;
+      if (act.lastTheme && act.lastTheme !== '–') {
+        h += `<div class="row"><span class="label">Letztes Thema</span><span class="val" style="text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${act.lastTheme}</span></div>`;
+      }
+      if (act.topics && act.topics.length) {
+        h += `<div style="margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)"><div class="field-label" style="margin-bottom:.35rem">Heutige Themen</div>`;
+        act.topics.forEach(t => { h += `<div style="font-size:.8rem;color:var(--muted);padding:.15rem 0;border-top:1px solid rgba(51,65,85,.4)">· ${t}</div>`; });
+        h += '</div>';
+      }
+    }
+    document.getElementById('activityCard').innerHTML = h;
   } catch(e) {}
 
   try {

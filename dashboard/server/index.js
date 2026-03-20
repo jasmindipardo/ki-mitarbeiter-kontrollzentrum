@@ -404,6 +404,56 @@ app.get('/api/openclaw/status', requireAuth, (req, res) => {
 
 
 // ─────────────────────────────────────────
+// AKTUELLE AKTIVITÄT (heutige Memory-Datei)
+// ─────────────────────────────────────────
+app.get('/api/activity', requireAuth, (req, res) => {
+  const { execSync } = require('child_process');
+  const today = new Date().toISOString().slice(0, 10);
+  const memFile = path.join(WS_PATH, 'memory', `${today}.md`);
+
+  let activity = { date: today, topics: [], lastTheme: '–', lines: 0, hasToday: false };
+
+  try {
+    if (fs.existsSync(memFile)) {
+      const content = fs.readFileSync(memFile, 'utf8');
+      const lines = content.split('\n');
+      activity.lines = lines.length;
+      activity.hasToday = true;
+
+      // Letzte Überschriften als aktuelle Themen
+      const headers = lines
+        .filter(l => l.match(/^#{1,3} /))
+        .map(l => l.replace(/^#{1,3} /, '').trim())
+        .filter(h => !h.includes('Bewusst nicht') && h.length > 3);
+      activity.topics = headers.slice(-5);
+      activity.lastTheme = headers[headers.length - 1] || '–';
+
+      // Letzte 3 nicht-leere Zeilen als Preview
+      const preview = lines
+        .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('---'))
+        .slice(-3)
+        .map(l => l.replace(/^\s*[-*]\s*/, '').trim())
+        .filter(l => l.length > 5);
+      activity.preview = preview;
+    }
+  } catch(e) { activity.error = e.message; }
+
+  // Aktive Sessions check
+  const sessionsRaw = run('openclaw sessions list --json 2>/dev/null');
+  let activeSessions = 0;
+  try {
+    if (sessionsRaw) {
+      const sessions = JSON.parse(sessionsRaw);
+      const arr = Array.isArray(sessions) ? sessions : (sessions.sessions || []);
+      const cutoff = Date.now() - 30 * 60 * 1000; // letzte 30 Min
+      activeSessions = arr.filter(s => new Date(s.updatedAt || 0).getTime() > cutoff).length;
+    }
+  } catch {}
+
+  res.json({ ...activity, activeSessions });
+});
+
+// ─────────────────────────────────────────
 // NEUE AUFGABE ANLEGEN
 // ─────────────────────────────────────────
 app.post('/api/crons', requireAuth, (req, res) => {
