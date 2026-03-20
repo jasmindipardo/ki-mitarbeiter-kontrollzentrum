@@ -338,7 +338,8 @@ function showPage(id, btn) {
   if (id==='env') loadEnvTable();
   if (id==='docs') loadDocsList('');
   if (id==='services') loadServices();
-  if (id==='logs') loadLogs();
+  if (id==='logs') { loadLogs(); startLogsAutoRefresh(); }
+  else stopLogsAutoRefresh();
 }
 function cronToText(expr) {
   if (!expr) return '–';
@@ -678,9 +679,19 @@ async function quickSend(text){
 }
 
 // ── INIT ─────────────────────────────────────
+let _logsTimer = null;
+function startLogsAutoRefresh() {
+  stopLogsAutoRefresh();
+  _logsTimer = setInterval(loadLogs, 8000);
+}
+function stopLogsAutoRefresh() {
+  if (_logsTimer) { clearInterval(_logsTimer); _logsTimer = null; }
+}
+
 async function loadAll(){ await loadOverview(); }
 loadAll();
-setInterval(loadAll,60000);
+// Übersicht alle 10 Sek aktualisieren (statt 60)
+setInterval(loadAll, 10000);
 </script>
 </body>
 </html>
