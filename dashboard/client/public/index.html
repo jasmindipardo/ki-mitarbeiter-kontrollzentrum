@@ -345,7 +345,8 @@ function selectJob(id) {
   const j = allJobs.find(j=>j.id===id);
   if (!j) return;
   const active = j.enabled!==false;
-  const sched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : j.schedule?.kind||'–');
+  const rawSched = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : j.schedule?.kind||'–');
+  const sched = j.schedule?.expr ? cronToText(j.schedule.expr) : rawSched;
   const msg = j.payload?.message||j.payload?.text||'';
   const lastRun = j.state?.lastRunAtMs ? new Date(j.state.lastRunAtMs).toLocaleString('de-DE') : '–';
   const nextRun = j.state?.nextRunAtMs ? new Date(j.state.nextRunAtMs).toLocaleString('de-DE') : '–';
@@ -491,6 +492,31 @@ async function saveDoc() {
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey)&&e.key==='s') { e.preventDefault(); saveDoc(); }
 });
+
+
+// Cron-Ausdruck in lesbares Deutsch übersetzen
+function cronToText(expr) {
+  if (!expr) return '–';
+  // Bekannte Muster
+  const patterns = [
+    [/^0 (\d+) \* \* \*$/, m => `täglich um ${m[1]}:00 Uhr`],
+    [/^(\d+) (\d+) \* \* \*$/, m => `täglich um ${m[2]}:${m[1].padStart(2,'0')} Uhr`],
+    [/^0 \*\/(\d+) \* \* \*$/, m => `alle ${m[1]} Stunden`],
+    [/^\*\/(\d+) \* \* \* \*$/, m => `alle ${m[1]} Minuten`],
+    [/^0 (\d+) \* \* (\d)$/, m => { const days=['So','Mo','Di','Mi','Do','Fr','Sa']; return `${days[m[2]||0]}s um ${m[1]}:00 Uhr`; }],
+    [/^0 9 \* \* 1$/, () => 'Mo, 9:00 Uhr'],
+    [/^0 0 \* \* \*$/, () => 'täglich um Mitternacht'],
+    [/^0 6 \* \* \*$/, () => 'täglich um 6:00 Uhr'],
+    [/^0 8 \* \* \*$/, () => 'täglich um 8:00 Uhr'],
+    [/^0 \*(\/(\d+))? \* \* \*$/, m => m[2] ? `alle ${m[2]} Stunden` : 'stündlich'],
+  ];
+  for (const [re, fn] of patterns) {
+    const m = expr.match(re);
+    if (m) return fn(m);
+  }
+  // Fallback: halbwegs lesbar machen
+  return expr.replace(/\* \* \*/g, 'täglich').replace(/\*/g, '–');
+}
 
 // ── INIT ──────────────────────────────────────
 async function loadAll() { await loadOverview(); }
