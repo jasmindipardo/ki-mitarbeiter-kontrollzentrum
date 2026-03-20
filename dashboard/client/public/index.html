@@ -232,18 +232,33 @@
 
 <!-- MODAL: Neue Aufgabe -->
 <div class="modal-bg" id="newJobModal">
-  <div class="modal">
+  <div class="modal" style="width:600px">
     <h3>⏰ Neue automatische Aufgabe anlegen</h3>
+
+    <div class="field-label">Vorlage auswählen (optional)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.75rem;max-height:200px;overflow-y:auto">
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('morgenbericht','Morgenbericht','Schreibe einen täglichen Morgenbericht. Lies die letzten 2 Tages-Dateien aus memory/ für Kontext. Kompakt: Was gemacht, was ansteht, Erinnerungen. Sende den Bericht als Antwort.','0 7 * * *')">☀️ Morgenbericht<br><span style="color:var(--muted)">tägl. 7 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('wochenbericht','Wochenbericht','Erstelle einen wöchentlichen Rückblick: Was wurde diese Woche erreicht? Welche Aufgaben sind offen? Welche Ideen sind entstanden? Sende den Bericht als Antwort.','0 16 * * 5')">📊 Wochenbericht<br><span style="color:var(--muted)">Fr 16 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('memory-sync','Memory-Sync','Lies die letzten Nachrichten der Main-Session und stelle sicher, dass alles Wichtige in MEMORY.md und der heutigen Tages-Datei steht. Antworte nur mit einer kurzen internen Zusammenfassung.','0 */3 * * *')">🧠 Memory-Sync<br><span style="color:var(--muted)">alle 3 Stunden</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('nachtschicht','Nachtschicht','Denke als strategischer Partner mit. Fokus auf: strategische Impulse, Positionierungs-Ideen, Prozessverbesserungen, neue Angebotsformate. KEIN Content erstellen. Ideen in ClickUp ablegen und im Morgenbericht zusammenfassen.','0 2 * * *')">🌙 Nachtschicht<br><span style="color:var(--muted)">tägl. 2 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('sicherheitscheck','Sicherheitscheck','Prüfe die Server-Sicherheit: offene Ports, ausstehende Updates, SSH-Konfiguration, Festplattenauslastung. Berichte wenn etwas auffällig ist.','0 6 * * 1')">🔒 Sicherheitscheck<br><span style="color:var(--muted)">Mo 6 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('content-ideen','Content-Ideen','Generiere 3 neue Content-Ideen (LinkedIn-Posts oder YouTube-Themen) basierend auf aktuellen Trends in der Freelancer-Zielgruppe. Lege die Ideen als ClickUp-Tasks mit Status Input/Idee an.','0 9 * * 1')">💡 Content-Ideen<br><span style="color:var(--muted)">Mo 9 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('update-check','Update-Check','Prüfe ob eine neue OpenClaw-Version verfügbar ist. Falls ja, führe das Update durch und informiere über das Ergebnis. Falls nein, sende keine Nachricht.','0 3 * * *')">🔄 Update-Check<br><span style="color:var(--muted)">tägl. 3 Uhr</span></button>
+      <button class="quick-btn" style="font-size:.75rem;padding:.4rem .6rem;text-align:left" onclick="useTemplate('newsletter-erinnerung','Newsletter-Erinnerung','Erinnerung: Dienstag ist Newsletter-Tag! Prüfe ob der Newsletter für diese Woche bereits in Brevo als Entwurf vorliegt. Falls nicht, informiere in #c-newsletter.','0 8 * * 2')">✉️ Newsletter-Erinnerung<br><span style="color:var(--muted)">Di 8 Uhr</span></button>
+    </div>
+
     <div class="field-label">Name der Aufgabe</div>
     <input class="ifield" id="newJobName" placeholder="z.B. wöchentlicher-report" />
     <div class="field-label">Anweisung (was soll der Assistent tun?)</div>
-    <textarea class="editor" id="newJobMsg" rows="4" placeholder="Schreibe einen wöchentlichen Bericht über..."></textarea>
-    <div class="field-label">Zeitplan (Cron-Ausdruck)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
-      <button class="quick-btn" style="font-size:.75rem;padding:.35rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 1'">Mo 9 Uhr</button>
-      <button class="quick-btn" style="font-size:.75rem;padding:.35rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 5'">Fr 9 Uhr</button>
-      <button class="quick-btn" style="font-size:.75rem;padding:.35rem .5rem" onclick="document.getElementById('newJobCron').value='0 8 * * *'">täglich 8 Uhr</button>
-      <button class="quick-btn" style="font-size:.75rem;padding:.35rem .5rem" onclick="document.getElementById('newJobCron').value='0 */3 * * *'">alle 3 Std</button>
+    <textarea class="editor" id="newJobMsg" rows="3" placeholder="Schreibe einen wöchentlichen Bericht über..."></textarea>
+    <div class="field-label">Zeitplan</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 1'">Mo 9 Uhr</button>
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 5'">Fr 9 Uhr</button>
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 8 * * *'">tägl. 8 Uhr</button>
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 2 * * *'">tägl. 2 Uhr</button>
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 */3 * * *'">alle 3 Std</button>
+      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 6 * * 1'">Mo 6 Uhr</button>
     </div>
     <input class="ifield" id="newJobCron" placeholder="0 9 * * 1  (= Mo 9 Uhr)" />
     <div class="modal-footer">
@@ -476,6 +491,11 @@ async function saveJobMsg(id){
   else toast(r.error||'Fehler','err');
 }
 function showNewJobModal(){document.getElementById('newJobModal').classList.add('show');}
+function useTemplate(name,label,msg,cron){
+  document.getElementById('newJobName').value=name;
+  document.getElementById('newJobMsg').value=msg;
+  document.getElementById('newJobCron').value=cron;
+}
 async function createJob(){
   const name=document.getElementById('newJobName').value.trim();
   const msg=document.getElementById('newJobMsg').value.trim();
