@@ -118,9 +118,9 @@
 
 <nav>
   <button class="tab active" onclick="showPage('overview', this)">📊 Übersicht</button>
-  <button class="tab" onclick="showPage('crons', this)">⏰ Cron Jobs</button>
-  <button class="tab" onclick="showPage('env', this)">🔑 Env-Variablen</button>
-  <button class="tab" onclick="showPage('docs', this)">📝 Dokumente</button>
+  <button class="tab" onclick="showPage('crons', this)">⏰ Aufgaben</button>
+  <button class="tab" onclick="showPage('env', this)">🔑 Zugangsdaten</button>
+  <button class="tab" onclick="showPage('docs', this)">📝 Dateien</button>
 </nav>
 
 <!-- ── ÜBERSICHT ────────────────────────────────── -->
@@ -128,32 +128,32 @@
   <div class="grid">
 
     <div class="card">
-      <div class="card-title">🔒 Tailscale Netzwerk</div>
+      <div class="card-title">🔒 Verbindung</div>
       <div id="tsCard"><span class="loading">Lädt…</span></div>
     </div>
 
     <div class="card">
-      <div class="card-title">🖥️ System</div>
+      <div class="card-title">💻 Server-Status</div>
       <div id="sysCard"><span class="loading">Lädt…</span></div>
     </div>
 
     <div class="card">
-      <div class="card-title">🦞 OpenClaw</div>
+      <div class="card-title">🤖 Assistent</div>
       <div id="ocCard"><span class="loading">Lädt…</span></div>
     </div>
 
     <div class="card">
-      <div class="card-title">⏰ Aktive Cron Jobs</div>
+      <div class="card-title">⏰ Automatische Aufgaben</div>
       <div id="cronSummary"><span class="loading">Lädt…</span></div>
     </div>
 
     <div class="card">
-      <div class="card-title">🔑 Env-Variablen</div>
+      <div class="card-title">🔑 Zugangsdaten</div>
       <div id="envSummary"><span class="loading">Lädt…</span></div>
     </div>
 
     <div class="card">
-      <div class="card-title">📁 Workspace Dateien</div>
+      <div class="card-title">📝 Meine Dateien</div>
       <div id="wsSummary"><span class="loading">Lädt…</span></div>
     </div>
 
@@ -163,7 +163,7 @@
 <!-- ── CRON JOBS ─────────────────────────────────── -->
 <div id="page-crons" class="page">
   <div class="card">
-    <div class="card-title">⏰ Cron Jobs verwalten</div>
+    <div class="card-title">⏰ Automatische Aufgaben verwalten</div>
     <div id="cronTable"><span class="loading">Lädt…</span></div>
   </div>
 </div>
@@ -171,7 +171,7 @@
 <!-- ── ENV VARIABLEN ──────────────────────────────── -->
 <div id="page-env" class="page">
   <div class="card" style="max-width:680px">
-    <div class="card-title">🔑 Neue Variable hinzufügen</div>
+    <div class="card-title">🔑 Neue Zugangsdaten eintragen</div>
     <div class="form-row">
       <input type="text" id="envKey" placeholder="KEY (z.B. CLICKUP_API_KEY)" />
       <input type="password" id="envVal" placeholder="Wert" />
@@ -180,7 +180,7 @@
   </div>
   <br>
   <div class="card">
-    <div class="card-title">🔑 Gespeicherte Variablen</div>
+    <div class="card-title">🔑 Gespeicherte Zugangsdaten</div>
     <div id="envTable"><span class="loading">Lädt…</span></div>
   </div>
 </div>
@@ -204,7 +204,7 @@
   </div>
 </div>
 
-<footer>KI-Mitarbeiter Kontrollzentrum · <a href="https://jasmindipardo.de" target="_blank">jasmindipardo.de</a> · Kurs: </footer>
+<footer><a href="https://jasmindipardo.de" target="_blank">jasmindipardo.de</a></footer>
 <div id="toast"></div>
 
 <script>
@@ -236,7 +236,7 @@ async function loadOverview() {
   let html = `<div class="big-val">${ts.ip}</div><div class="sub-val">Deine Tailscale-IP</div>`;
   (ts.peers || []).slice(0, 5).forEach(p => {
     html += `<div class="row"><span class="label">${p.name}</span><span class="val" style="font-size:.75rem">${p.ip}</span><span class="badge ${p.online ? 'badge-green' : 'badge-muted'}">${p.online ? 'online' : 'offline'}</span></div>`;
-  });
+  
   if (!ts.peers?.length) html += `<div class="row"><span class="label" style="font-style:italic">Keine weiteren Geräte</span></div>`;
   document.getElementById('tsCard').innerHTML = html;
 
@@ -245,15 +245,14 @@ async function loadOverview() {
   let sh = '';
   [['Hostname', sys.hostname], ['Uptime', sys.uptime], ['RAM', sys.mem], ['Disk', sys.disk], ['OpenClaw', sys.version]].forEach(([l, v]) => {
     if (v) sh += `<div class="row"><span class="label">${l}</span><span class="val">${v}</span></div>`;
-  });
+  
   document.getElementById('sysCard').innerHTML = sh;
 
   // OpenClaw
   const oc = await api('/api/openclaw/status');
+  const ocRunning = oc.status && oc.status.includes('active');
   let och = `<div class="row"><span class="label">Version</span><span class="val">${oc.version || '–'}</span></div>`;
-  if (oc.status) oc.status.split('\n').filter(Boolean).slice(0, 5).forEach(l => {
-    och += `<div class="row"><span class="val" style="color:var(--muted);font-size:.78rem">${l}</span></div>`;
-  });
+  och += `<div class="row"><span class="label">Status</span><span class="badge ${ocRunning ? 'badge-green' : 'badge-yellow'}">${ocRunning ? 'läuft ✓' : 'prüfen'}</span></div>`;
   document.getElementById('ocCard').innerHTML = och;
 
   // Cron summary
@@ -265,7 +264,7 @@ async function loadOverview() {
   if (Array.isArray(jobs)) jobs.slice(0, 4).forEach(j => {
     const s = j.schedule?.expr || (j.schedule?.everyMs ? `alle ${Math.round(j.schedule.everyMs/60000)} Min` : '–');
     crh += `<div class="row"><span class="label">${j.name || j.id || 'Job'}</span><span class="badge ${j.enabled !== false ? 'badge-green' : 'badge-muted'}">${j.enabled !== false ? 'aktiv' : 'aus'}</span></div>`;
-  });
+  
   document.getElementById('cronSummary').innerHTML = crh;
 
   // Env summary
@@ -274,7 +273,7 @@ async function loadOverview() {
   let enh = `<div class="big-val">${vars.length}</div><div class="sub-val">Variablen gesetzt</div>`;
   vars.slice(0, 5).forEach(v => {
     enh += `<div class="row"><span class="label" style="font-family:monospace">${v.key}</span><span class="val" style="color:var(--muted)">${v.preview}</span></div>`;
-  });
+  
   document.getElementById('envSummary').innerHTML = enh;
 
   // Workspace
@@ -282,9 +281,9 @@ async function loadOverview() {
   const files = ws.files || [];
   let wsh = `<div class="big-val">${files.length}</div><div class="sub-val">Dateien im Workspace</div>`;
   files.slice(0, 5).forEach(f => {
-    const d = new Date(f.modified).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'});
+    const d = new Date(f.modified).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit'
     wsh += `<div class="row"><span class="label" style="font-family:monospace">${f.name}</span><span class="val" style="color:var(--muted)">${d}</span></div>`;
-  });
+  
   document.getElementById('wsSummary').innerHTML = wsh;
 
   document.getElementById('headerSub').textContent = `Zuletzt: ${new Date().toLocaleTimeString('de-DE')}`;
@@ -316,25 +315,25 @@ async function loadCronTable() {
         <button class="btn btn-sm btn-danger" onclick="deleteCron('${id}')">✕</button>
       </span>
     </div>`;
-  });
+  
   el.innerHTML = html;
 }
 
 async function toggleCron(id, active) {
-  const r = await api(`/api/crons/${id}/${active ? 'disable' : 'enable'}`, { method: 'POST' });
+  const r = await api(`/api/crons/${id}/${active ? 'disable' : 'enable'}`, { method: 'POST' 
   toast(active ? 'Job pausiert' : 'Job aktiviert');
   loadCronTable();
   loadOverview();
 }
 async function deleteCron(id) {
   if (!confirm(`Job "${id}" wirklich löschen?`)) return;
-  await api(`/api/crons/${id}`, { method: 'DELETE' });
+  await api(`/api/crons/${id}`, { method: 'DELETE' 
   toast('Job gelöscht');
   loadCronTable();
   loadOverview();
 }
 async function runCron(id) {
-  await api(`/api/crons/${id}/run`, { method: 'POST' });
+  await api(`/api/crons/${id}/run`, { method: 'POST' 
   toast(`Job "${id}" manuell gestartet`);
 }
 
@@ -354,14 +353,14 @@ async function loadEnvTable() {
         <button class="btn btn-sm btn-danger" onclick="deleteEnv('${v.key}')">✕ Löschen</button>
       </span>
     </div>`;
-  });
+  
   el.innerHTML = html;
 }
 async function saveEnv() {
   const key = document.getElementById('envKey').value.trim();
   const value = document.getElementById('envVal').value;
   if (!key) { toast('Key fehlt', 'err'); return; }
-  await api('/api/env', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key, value }) });
+  await api('/api/env', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key, value }) 
   document.getElementById('envKey').value = '';
   document.getElementById('envVal').value = '';
   toast(`${key} gespeichert`);
@@ -370,7 +369,7 @@ async function saveEnv() {
 }
 async function deleteEnv(key) {
   if (!confirm(`Variable "${key}" löschen?`)) return;
-  await api(`/api/env/${key}`, { method: 'DELETE' });
+  await api(`/api/env/${key}`, { method: 'DELETE' 
   toast(`${key} gelöscht`);
   loadEnvTable();
   loadOverview();
@@ -400,7 +399,7 @@ async function loadDocsList(dir) {
   dirs.forEach(d => {
     const icon = d.name === 'skills' ? '🛠️' : d.name === 'memory' ? '🧠' : d.name === 'checklists' ? '✅' : '📁';
     html += `<button class="sidebar-file" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;
-  });
+  
 
   // Dateien
   if (!files.length && !dirs.length) {
@@ -408,7 +407,7 @@ async function loadDocsList(dir) {
   }
   files.forEach(f => {
     html += `<button class="sidebar-file ${currentDoc === f.path ? 'active' : ''}" onclick="openDoc('${f.path}')" title="${f.path}">${f.name}</button>`;
-  });
+  
   el.innerHTML = html;
 }
 
@@ -424,7 +423,7 @@ async function openDoc(filePath) {
   document.getElementById('editorHint').classList.remove('show');
   document.querySelectorAll('.sidebar-file').forEach(b => {
     b.classList.toggle('active', b.getAttribute('onclick') === `openDoc('${filePath}')`);
-  });
+  
 }
 
 async function saveDoc() {
@@ -434,7 +433,7 @@ async function saveDoc() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: currentDoc, content })
-  });
+  
   if (r.ok) {
     const hint = document.getElementById('editorHint');
     hint.classList.add('show');
@@ -446,7 +445,7 @@ async function saveDoc() {
 // Ctrl+S / Cmd+S im Editor
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveDoc(); }
-});
+
 
 // ── Init ──────────────────────────────────────────
 async function loadAll() { await loadOverview(); }
@@ -516,7 +515,7 @@ async function doLogin() {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ password: pw })
-    });
+    
     const data = await r.json();
     if (r.ok && data.token) {
       authToken = data.token;
@@ -545,7 +544,7 @@ window.fetch = function(url, opts = {}) {
       return r;
     }
     return r;
-  });
+  
 };
 
 // Beim Start: prüfen ob Token noch gültig

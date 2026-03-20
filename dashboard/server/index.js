@@ -271,8 +271,12 @@ app.get('/api/env', requireAuth, (req, res) => {
   try {
     const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
     const env = config.env || {};
-    const vars = Object.keys(env).map(key => {
-      const v = String(env[key] || '');
+    // Vars können direkt in env ODER in env.vars stecken
+    const merged = { ...(env.vars || {}), ...env };
+    delete merged.vars; // vars-Objekt selbst nicht anzeigen
+
+    const vars = Object.keys(merged).sort().map(key => {
+      const v = String(merged[key] || '');
       const preview = v.length > 8
         ? v.slice(0, 4) + '•'.repeat(Math.min(v.length - 8, 16)) + v.slice(-4)
         : '••••••••';
