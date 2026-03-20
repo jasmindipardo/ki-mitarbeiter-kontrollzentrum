@@ -180,6 +180,9 @@
   <div class="split">
     <div class="sidebar">
       <div class="sidebar-title">Dateien</div>
+      <div style="padding:.5rem .75rem;border-bottom:1px solid var(--border)">
+        <input class="ifield" id="docSearch" placeholder="🔍 Suchen…" oninput="filterDocs(this.value)" style="margin-bottom:0;font-size:.8rem;padding:.3rem .6rem" />
+      </div>
       <div id="docsList"></div>
     </div>
     <div class="main-panel" id="docsEditor"><div class="placeholder">← Datei auswählen</div></div>
@@ -531,17 +534,35 @@ async function deleteEnv(key){if(!confirm(`"${key}" löschen?`))return;await api
 
 // ── DATEIEN ──────────────────────────────────
 let curDoc=null;
+let allDocsData = { files: [], dirs: [], dir: '' };
+
 async function loadDocsList(dir){
   dir=dir||'';
+  document.getElementById('docSearch').value='';
   const ws=await api('/api/workspace'+(dir?`?dir=${encodeURIComponent(dir)}`:''));
-  const files=ws.files||[],dirs=ws.dirs||[];
+  allDocsData = { files: ws.files||[], dirs: ws.dirs||[], dir };
+  renderDocsList(ws.files||[], ws.dirs||[], dir);
+}
+
+function renderDocsList(files, dirs, dir) {
   const el=document.getElementById('docsList');
   let h='';
   if(dir){const parent=dir.includes('/')?dir.substring(0,dir.lastIndexOf('/')):'';h+=`<button class="sitem" onclick="loadDocsList('${parent}')" style="color:var(--accent);font-size:.75rem">← zurück</button>`;}
-  dirs.forEach(d=>{const icon=d.name==='skills'?'🛠️':d.name==='memory'?'🧠':d.name==='checklists'?'✅':'📁';h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;});
+  dirs.forEach(d=>{
+    const icon=d.name==='skills'?'🛠️':d.name==='memory'?'🧠':d.name==='checklists'?'✅':'📁';
+    const cnt=d.count!=null?` <span style="color:var(--muted);font-size:.7rem">(${d.count})</span>`:'';
+    h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/${cnt}</button>`;
+  });
   if(!files.length&&!dirs.length) h+='<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>';
   files.forEach(f=>{h+=`<button class="sitem ${curDoc===f.path?'active':''}" onclick="openDoc('${f.path}')">${f.name}</button>`;});
   el.innerHTML=h;
+}
+
+function filterDocs(q) {
+  if (!q.trim()) { renderDocsList(allDocsData.files, allDocsData.dirs, allDocsData.dir); return; }
+  const lq = q.toLowerCase();
+  const filtered = allDocsData.files.filter(f => f.name.toLowerCase().includes(lq) || f.path.toLowerCase().includes(lq));
+  renderDocsList(filtered, [], allDocsData.dir ? allDocsData.dir : '');
 }
 async function openDoc(path){
   const data=await api(`/api/workspace/file?name=${encodeURIComponent(path)}`);

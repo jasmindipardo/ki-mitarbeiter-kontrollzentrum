@@ -330,12 +330,20 @@ app.get('/api/workspace', requireAuth, (req, res) => {
         const stat = fs.statSync(path.join(targetPath, e.name));
         return { name: e.name, path: safedir ? `${safedir}/${e.name}` : e.name, size: stat.size, modified: stat.mtime };
       })
-      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Unterordner anzeigen (skills/, memory/ etc.)
+    // Unterordner anzeigen (skills/, memory/ etc.) mit Dateianzahl
     const dirs = entries
       .filter(e => e.isDirectory() && !e.name.startsWith('.') && !['node_modules', '__pycache__'].includes(e.name))
-      .map(e => ({ name: e.name, path: safedir ? `${safedir}/${e.name}` : e.name }));
+      .map(e => {
+        const dpath = path.join(targetPath, e.name);
+        let count = 0;
+        try {
+          count = fs.readdirSync(dpath).filter(f => f.endsWith('.md') || f.endsWith('.json')).length;
+        } catch {}
+        return { name: e.name, path: safedir ? `${safedir}/${e.name}` : e.name, count };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     res.json({ files, dirs, currentDir: safedir || '/' });
   } catch (e) { res.json({ error: e.message }); }
