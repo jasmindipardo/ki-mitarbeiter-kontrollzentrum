@@ -185,7 +185,7 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({ ok: true, ip: req.clientIp });
 });
 
-app.use(express.static(path.join(__dirname, '../client/public')));
+app.use(express.static(path.join(__dirname, '../client/public'), { maxAge: 0, etag: false }));
 
 function run(cmd) {
   try { return execSync(cmd, { encoding: 'utf8', timeout: 8000 }).trim(); }
@@ -383,10 +383,15 @@ app.get('/api/system', requireAuth, (req, res) => {
 });
 
 app.get('/api/openclaw/status', requireAuth, (req, res) => {
-  res.json({
-    version: run('openclaw --version'),
-    status: run('openclaw gateway status 2>/dev/null'),
-  });
+  const version = run('openclaw --version');
+  // Gateway-Port aus Status-Ausgabe lesen
+  const statusOut = run('openclaw gateway status 2>/dev/null') || '';
+  const portMatch = statusOut.match(/--port (\d+)/);
+  const port = portMatch ? portMatch[1] : '18789';
+  // Health-Check gegen den laufenden Gateway
+  const health = run(`curl -s --max-time 2 http://localhost:${port}/health 2>/dev/null`);
+  const running = health && health.includes('"ok":true');
+  res.json({ version, running, port });
 });
 
 // ─────────────────────────────────────────

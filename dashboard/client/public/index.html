@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KI-Mitarbeiter Kontrollzentrum</title>
+  <title>KI-Mitarbeiter Kontrollzentrum v2</title>
   <style>
     :root {
       --bg:#0f172a;--surface:#1e293b;--surface2:#273548;
@@ -254,7 +254,7 @@ async function loadOverview() {
   // Tailscale
   try {
     const ts = await api('/api/tailscale');
-    let h = `<div class="big-val">${ts.ip||'–'}</div><div class="sub-val">Tailscale-IP</div>`;
+    let h = `<div class="big-val">${ts.ip||'–'}</div><div class="sub-val" title="Das ist deine private Netzwerk-Adresse. Über diese IP erreichst du das Kontrollzentrum von überall.">Deine sichere IP-Adresse ℹ️</div>`;
     (ts.peers||[]).slice(0,4).forEach(p => {
       h += `<div class="row"><span class="label">${p.name}</span><span><span class="badge ${p.online?'badge-green':'badge-muted'}">${p.online?'online':'offline'}</span></span></div>`;
     });
@@ -266,7 +266,7 @@ async function loadOverview() {
   try {
     const sys = await api('/api/system');
     let h = '';
-    [['Hostname',sys.hostname],['Uptime',sys.uptime],['RAM',sys.mem],['Festplatte',sys.disk],['Version',sys.version]].forEach(([l,v]) => {
+    [['Servername',sys.hostname],['Laufzeit',sys.uptime],['Arbeitsspeicher',sys.mem],['Festplatte',sys.disk],['OpenClaw',sys.version]].forEach(([l,v]) => {
       if (v) h += `<div class="row"><span class="label">${l}</span><span class="val">${v}</span></div>`;
     });
     document.getElementById('sysCard').innerHTML = h;
