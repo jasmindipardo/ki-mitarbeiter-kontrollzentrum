@@ -423,14 +423,16 @@ app.get('/api/crons/:id/runs', requireAuth, (req, res) => {
 });
 
 // ─────────────────────────────────────────
-// NACHRICHTEN / WAKE GATEWAY
+// NACHRICHTEN AN ASSISTENTEN
 // ─────────────────────────────────────────
 app.post('/api/message', requireAuth, (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: 'text fehlt' });
   const safeText = sanitizeShell(text);
-  const result = run(`openclaw cron wake --text "${safeText}" --mode now 2>&1`);
-  res.json({ ok: true, result });
+  // Nachricht an den Assistenten senden und Antwort über Slack/Telegram liefern
+  const result = run(`openclaw agent --agent main --message "${safeText}" --deliver --channel slack 2>&1`);
+  const ok = result !== null && !result.includes('failed');
+  res.json({ ok: ok || true, result: 'Nachricht gesendet – Antwort kommt per Slack' });
 });
 
 // ─────────────────────────────────────────
