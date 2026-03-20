@@ -536,46 +536,78 @@ app.get('/api/services', requireAuth, (req, res) => {
 app.get('/api/logs', requireAuth, (req, res) => {
   const now = new Date();
   const tz = 'Europe/Berlin';
-  function toBerlinDate(d) {
-    return d.toLocaleDateString('sv-SE', {timeZone: tz});
+  function toBerlinDate(d) { return d.toLocaleDateString('sv-SE', {timeZone: tz}); }
+  function toBerlinTime(d) {
+    return d.toLocaleTimeString('de-DE', {timeZone: tz, hour:'2-digit', minute:'2-digit'}) + ' Uhr';
   }
-  const todayStr = toBerlinDate(now);
-  const yesterdayStr = toBerlinDate(new Date(now - 86400000));
+  function utcToMez(timeStr) {
+    // "21:00 UTC" → "22:00 Uhr", "00:00 UTC" → "01:00 Uhr"
+    const m = timeStr.match(/(\d{1,2}):(\d{2})\s*UTC/);
+    if (!m) return timeStr.replace(/UTC/, '').trim() + ' Uhr';
+    const h = (parseInt(m[1]) + 1) % 24;
+    return String(h).padStart(2,'0') + ':' + m[2] + ' Uhr';
+  }
+  function timeToMs(dateStr, timeStr) {
+    // "21:11 Uhr" → ms für Sortierung
+    const t = timeStr.replace(' Uhr','').replace(' UTC','');
+    const parts = t.split(':');
+    if (parts.length < 2) return 0;
+    const h = parseInt(parts[0]);
+    const min = parseInt(parts[1]);
+    const [y,mo,d] = dateStr.split('-').map(Number);
+    return Date.UTC(y, mo-1, d, h, min);
+  }
 
-  const entries = [];
+  const today = toBerlinDate(now);
+  const yesterday = toBerlinDate(new Date(now - 86400000));
+  const allEntries = [];
 
-  [todayStr, yesterdayStr].forEach(dateStr => {
-    const memFile = path.join(WS_PATH, 'memory', `${dateStr}.md`);
+  // 1) Memory-Dateien lesen
+  [today, yesterday].forEach(dateStr => {
+    const memFile = path.join(WS_PATH, 'memory', dateStr + '.md');
     if (!fs.existsSync(memFile)) return;
     try {
       const lines = fs.readFileSync(memFile, 'utf8').split('\n');
+      let skip = false;
       let curTime = '';
-      let curSection = '';
+      let sortMs = 0;
       lines.forEach(line => {
         if (line.startsWith('## ')) {
           const h = line.slice(3).trim();
-          if (h.includes('Weitermachen')) { curSection = 'SKIP'; return; }
+          skip = h.includes('Weitermachen');
+          if (skip) return;
+          // Zeit extrahieren
           const mezM = h.match(/\((\d{1,2}:\d{2})\s*MEZ\)/);
           const utcM = h.match(/(\d{1,2}:\d{2})\s*UTC/);
-          curTime = mezM ? mezM[1] + ' Uhr' : utcM ? utcM[1] + ' UTC' : '';
-          curSection = h.replace(/\s+\d{1,2}:\d{2}.*$/, '').trim();
-          entries.push({ date: dateStr, time: curTime, type: 'header',
-            text: curSection + (curTime ? ' — ' + curTime : '') });
+          if (mezM) {
+            curTime = mezM[1] + ' Uhr';
+          } else if (utcM) {
+            curTime = utcToMez(utcM[0]);
+          } else {
+            curTime = '';
+          }
+          sortMs = curTime ? timeToMs(dateStr, curTime) : 0;
+          const label = h.replace(/\s*(\(\d{1,2}:\d{2}\s*MEZ\)|\d{1,2}:\d{2}\s*UTC.*)$/,'').trim();
+          allEntries.push({ date: dateStr, time: curTime, type: 'header', sortMs, text: label + (curTime ? ' — ' + curTime : '') });
+        } else if (skip) {
+          return;
         } else if (line.startsWith('### ')) {
           const sub = line.slice(4).trim();
           if (sub && !sub.includes('Bewusst') && sub.length > 2)
-            entries.push({ date: dateStr, time: curTime, type: 'sub', text: sub });
-        } else if (curSection === 'SKIP') {
-          return; // Weitermachen-Block überspringen
-        } else if (/^\s*[-*]\s/.test(line) && line.includes('86c8')) {
-          const t = line.replace(/^\s*[-*]\s*/, '').trim().slice(0, 90);
-          if (t) entries.push({ date: dateStr, time: curTime, type: 'task', text: t });
+            allEntries.push({ date: dateStr, time: curTime, type: 'sub', sortMs, text: sub });
+        } else if (/^\s*[-*]\s*/.test(line)) {
+          const t = line.replace(/^\s*[-*]\s*/, '').trim();
+          // Reine URLs überspringen
+          if (!t || t.match(/^https?:\/\//)) return;
+          // Nur wenn informativer Inhalt
+          if (t.length > 5 && !t.startsWith('Kein Content'))
+            allEntries.push({ date: dateStr, time: curTime, type: 'item', sortMs, text: t.slice(0,100) });
         }
       });
     } catch {}
   });
 
-  // Cron-Läufe (letzte 24h)
+  // 2) Cron-Läufe letzte 24h
   try {
     const cronRaw = run('openclaw cron list --json 2>/dev/null');
     if (cronRaw) {
@@ -584,27 +616,20 @@ app.get('/api/logs', requireAuth, (req, res) => {
         const ms = j.state && j.state.lastRunAtMs;
         if (ms && ms > now - 86400000) {
           const d = new Date(ms);
-          const dStr = toBerlinDate(d);
-          const tStr = d.toLocaleTimeString('de-DE', {timeZone: tz, hour:'2-digit', minute:'2-digit'}) + ' Uhr';
-          const status = j.state.lastStatus === 'ok' ? '\u2705' : '\u274c';
-          entries.push({ date: dStr, time: tStr, type: 'cron', sortMs: ms,
-            text: status + ' Aufgabe: ' + (j.name || j.id) + ' (' + tStr + ')' });
+          const dateStr = toBerlinDate(d);
+          const timeStr = toBerlinTime(d);
+          const ok = j.state.lastStatus === 'ok';
+          allEntries.push({ date: dateStr, time: timeStr, type: 'cron', sortMs: ms,
+            text: (ok ? '✅' : '❌') + ' ' + (j.name || j.id) });
         }
       });
     }
   } catch {}
 
-  // Korrekte Sortierung: neueste zuerst, nach Datum + UTC-Zeit im Header
-  entries.sort((a, b) => {
-    if (a.sortMs || b.sortMs) return (b.sortMs||0) - (a.sortMs||0);
-    const dateCompare = (b.date||'').localeCompare(a.date||'');
-    if (dateCompare !== 0) return dateCompare;
-    // Zeitvergleich: "21:11 Uhr" vs "03:00 Uhr" - numerisch
-    const ta = parseInt((a.time||'0').replace(/[^0-9]/g,'')) || 0;
-    const tb = parseInt((b.time||'0').replace(/[^0-9]/g,'')) || 0;
-    return tb - ta;
-  });
-  res.json({ logs: entries.slice(0, 100) });
+  // 3) Sortieren: neueste zuerst
+  allEntries.sort((a, b) => (b.sortMs || 0) - (a.sortMs || 0));
+
+  res.json({ logs: allEntries.slice(0, 100) });
 });
 
 
