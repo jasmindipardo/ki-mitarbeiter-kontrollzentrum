@@ -534,57 +534,67 @@ app.get('/api/services', requireAuth, (req, res) => {
 // LOGS (letzte Zeilen aus OpenClaw-Log)
 // ─────────────────────────────────────────
 app.get('/api/logs', requireAuth, (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
-  const logFile = `/tmp/openclaw/openclaw-${today}.log`;
-  const lines = parseInt(req.query.lines) || 60;
-  const raw = run(`tail -n ${lines * 3} "${logFile}" 2>/dev/null`);
-  if (!raw) return res.json({ logs: [] });
-
-  // Log-Einträge parsen und in lesbares Deutsch übersetzen
-  function simplify(msg) {
-    if (!msg || !msg.trim()) return null;
-    const m = msg.trim();
-    // Bekannte Muster → lesbarer Text
-    if (m.includes('Listening:')) return { type: 'system', text: '🟢 Assistent gestartet' };
-    if (m.includes('RPC probe: ok')) return { type: 'system', text: '✅ Verbindung OK' };
-    if (m.includes('heartbeat') || m.includes('HEARTBEAT_OK')) return null; // überspringen
-    if (m.includes('inbound message') || m.includes('Inbound')) return { type: 'message', text: '📨 Nachricht empfangen' };
-    if (m.includes('cron') && m.includes('trigger')) return { type: 'cron', text: '⏰ Automatische Aufgabe gestartet' };
-    if (m.includes('session') && m.includes('start')) return { type: 'session', text: '💬 Neue Session gestartet' };
-    if (m.includes('tool call') || m.includes('tool_call')) return { type: 'work', text: '🔧 Werkzeug aufgerufen' };
-    if (m.includes('memory') || m.includes('Memory')) return { type: 'memory', text: '🧠 Memory aktualisiert' };
-    if (m.includes('ClickUp')) return { type: 'work', text: '📋 ClickUp-Aktion ausgeführt' };
-    if (m.includes('Slack') || m.includes('slack')) return { type: 'message', text: '💬 Slack-Nachricht verarbeitet' };
-    if (m.includes('Telegram') || m.includes('telegram')) return { type: 'message', text: '💬 Telegram-Nachricht verarbeitet' };
-    if (m.includes('cron job') || m.includes('Job')) return { type: 'cron', text: '⏰ Aufgabe ausgeführt' };
-    if (m.includes('ERROR') || m.includes('error')) return { type: 'error', text: '⚠️ Fehler aufgetreten' };
-    if (m.includes('agent turn') || m.includes('agentTurn')) return { type: 'work', text: '🤖 Arbeite an einer Aufgabe…' };
-    if (m.includes('Gateway') || m.includes('gateway')) return { type: 'system', text: '⚙️ System-Status Update' };
-    // Kurze, informative Zeilen direkt zeigen
-    if (m.length < 80 && !m.includes('{') && !m.includes('subsystem')) {
-      return { type: 'info', text: m };
-    }
-    return null;
+  const now = new Date();
+  const tz = 'Europe/Berlin';
+  function toBerlinDate(d) {
+    return d.toLocaleDateString('sv-SE', {timeZone: tz});
   }
+  const todayStr = toBerlinDate(now);
+  const yesterdayStr = toBerlinDate(new Date(now - 86400000));
 
-  const seen = new Set();
-  const logs = raw.split('\n').filter(Boolean).reverse().map(line => {
+  const entries = [];
+
+  [todayStr, yesterdayStr].forEach(dateStr => {
+    const memFile = path.join(WS_PATH, 'memory', `${dateStr}.md`);
+    if (!fs.existsSync(memFile)) return;
     try {
-      const obj = JSON.parse(line);
-      const time = obj.time ? new Date(obj.time).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'}) : '–';
-      const level = obj._meta?.logLevelName || 'INFO';
-      const msg = obj['0'] || '';
-      const simple = simplify(msg);
-      if (!simple) return null;
-      const key = simple.text;
-      if (seen.has(key)) return null; // Duplikate entfernen
-      seen.add(key);
-      return { time, level, ...simple };
-    } catch { return null; }
-  }).filter(Boolean).slice(0, 20);
+      const lines = fs.readFileSync(memFile, 'utf8').split('\n');
+      let curTime = '';
+      let curSection = '';
+      lines.forEach(line => {
+        if (line.startsWith('## ')) {
+          const h = line.slice(3).trim();
+          if (h.includes('Weitermachen')) return;
+          const mezM = h.match(/\((\d{1,2}:\d{2})\s*MEZ\)/);
+          const utcM = h.match(/(\d{1,2}:\d{2})\s*UTC/);
+          curTime = mezM ? mezM[1] + ' Uhr' : utcM ? utcM[1] + ' UTC' : '';
+          curSection = h.replace(/\s+\d{1,2}:\d{2}.*$/, '').trim();
+          entries.push({ date: dateStr, time: curTime, type: 'header',
+            text: curSection + (curTime ? ' — ' + curTime : '') });
+        } else if (line.startsWith('### ')) {
+          const sub = line.slice(4).trim();
+          if (sub && !sub.includes('Bewusst') && sub.length > 2)
+            entries.push({ date: dateStr, time: curTime, type: 'sub', text: sub });
+        } else if (/^\s*[-*]\s/.test(line) && line.includes('86c8')) {
+          const t = line.replace(/^\s*[-*]\s*/, '').trim().slice(0, 90);
+          if (t) entries.push({ date: dateStr, time: curTime, type: 'task', text: t });
+        }
+      });
+    } catch {}
+  });
 
-  res.json({ logs: logs.reverse() });
+  // Cron-Läufe (letzte 24h)
+  try {
+    const cronRaw = run('openclaw cron list --json 2>/dev/null');
+    if (cronRaw) {
+      const data = JSON.parse(cronRaw);
+      (data.jobs || []).forEach(j => {
+        const ms = j.state && j.state.lastRunAtMs;
+        if (ms && ms > now - 86400000) {
+          const d = new Date(ms);
+          const dStr = toBerlinDate(d);
+          const tStr = d.toLocaleTimeString('de-DE', {timeZone: tz, hour:'2-digit', minute:'2-digit'}) + ' Uhr';
+          const status = j.state.lastStatus === 'ok' ? '\u2705' : '\u274c';
+          entries.push({ date: dStr, time: tStr, type: 'cron', sortMs: ms,
+            text: status + ' Aufgabe: ' + (j.name || j.id) + ' (' + tStr + ')' });
+        }
+      });
+    }
+  } catch {}
+
+  res.json({ logs: entries.slice(0, 100) });
 });
+
 
 // ─────────────────────────────────────────
 // GATEWAY NEUSTART

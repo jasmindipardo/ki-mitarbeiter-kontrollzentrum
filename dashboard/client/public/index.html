@@ -653,13 +653,29 @@ async function loadServices(){
 async function loadLogs(){
   const el=document.getElementById('logsContent');
   el.innerHTML='<span class="loading">Lädt…</span>';
-  const data=await api('/api/logs?lines=60');
+  const data=await api('/api/logs');
   const logs=data.logs||[];
-  if(!logs.length){el.innerHTML='<div style="padding:1rem;color:var(--muted)">Noch keine Aktivitäten heute</div>';return;}
-  let h=`<div style="max-height:500px;overflow-y:auto">`;
+  if(!logs.length){el.innerHTML='<div style="padding:1rem;color:var(--muted)">Noch keine Aktivitäten in den letzten 24h</div>';return;}
+
+  let h='<div style="max-height:600px;overflow-y:auto">';
+  let lastDate='';
   logs.forEach(l=>{
-    const isErr=l.level==='ERROR'||l.text?.includes('⚠️');
-    h+=`<div class="log-line"><span class="log-time">${l.time}</span><span class="log-msg ${isErr?'log-err':''}">${l.text||l.msg}</span></div>`;
+    if(l.date && l.date !== lastDate){
+      const d=new Date(l.date);
+      const label=l.date===new Date().toISOString().slice(0,10)?'Heute':d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+      h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0">${label}</div>`;
+      lastDate=l.date;
+    }
+    const isHeader=l.type==='header';
+    const isSub=l.type==='sub';
+    const isTask=l.type==='task';
+    const isCron=l.type==='cron';
+    const isErr=l.text?.includes('❌');
+    const bg=isHeader?'var(--surface2)':'transparent';
+    const fw=isHeader?'600':'400';
+    const fc=isErr?'var(--red)':isHeader?'var(--text)':isCron?'var(--accent)':'var(--muted)';
+    const pl=isHeader?'1rem':isSub?'1.75rem':'2.25rem';
+    h+=`<div style="padding:.35rem ${pl};border-bottom:1px solid rgba(51,65,85,.3);font-size:${isHeader?'.85':'.8'}rem;background:${bg};font-weight:${fw};color:${fc}">${l.text}</div>`;
   });
   h+='</div>';
   el.innerHTML=h;
