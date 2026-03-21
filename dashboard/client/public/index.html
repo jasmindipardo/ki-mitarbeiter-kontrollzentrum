@@ -8,7 +8,7 @@
     :root{--bg:#0f172a;--surface:#1e293b;--surface2:#273548;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#01A09A;--accent2:#FF0068;--green:#22c55e;--yellow:#F6BC26;--red:#ef4444}
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-    header{background:var(--surface);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:101}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
     header h1{font-size:1.1rem;font-weight:600}
@@ -23,7 +23,7 @@
     .btn-danger:hover{background:var(--red);color:#fff}
     .btn-sm{padding:.2rem .55rem;font-size:.73rem}
     .btn:disabled{opacity:.4;cursor:default}
-    nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:.1rem;overflow-x:auto}
+    nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;gap:.1rem;overflow-x:auto;position:sticky;top:0;z-index:100}
     .tab{padding:.6rem 1rem;font-size:.85rem;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
     .tab:hover{color:var(--text)}
     .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -86,6 +86,8 @@
     #toast.ok{border-color:var(--green);color:var(--green)}
     #toast.err{border-color:var(--red);color:var(--red)}
     .loading{color:var(--muted);font-style:italic;font-size:.83rem;padding:1rem 0}
+    #loadBanner{position:fixed;top:0;left:0;right:0;z-index:999;background:var(--accent);color:#fff;font-size:.82rem;font-weight:600;text-align:center;padding:.45rem 1rem;letter-spacing:.03em;transition:opacity .4s}
+    #loadBanner.hidden{opacity:0;pointer-events:none}
     #loginOverlay{display:none;position:fixed;inset:0;background:#0f172a;z-index:1000;align-items:center;justify-content:center}
     #loginOverlay.show{display:flex}
     .lbox{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:2.5rem 2rem;width:340px;text-align:center}
@@ -106,7 +108,8 @@
 <body>
 
 <header>
-  <div class="dot"></div>
+  <div id="loadBanner">⏳ Kontrollzentrum wird geladen — einen Moment bitte …</div>
+<div class="dot"></div>
   <div>
     <h1>🔒 KI-Mitarbeiter Kontrollzentrum</h1>
     <div class="header-sub" id="headerSub">Lädt…</div>
@@ -799,7 +802,12 @@ function stopLogsAutoRefresh() {
   if (_logsTimer) { clearInterval(_logsTimer); _logsTimer = null; }
 }
 
-async function loadAll(){ await loadOverview(); }
+async function loadAll(){
+  await loadOverview();
+  // Lade-Banner ausblenden sobald Übersicht geladen
+  const banner = document.getElementById('loadBanner');
+  if (banner) { banner.classList.add('hidden'); setTimeout(()=>banner.remove(), 500); }
+}
 loadAll();
 setInterval(loadAll, 300000); // alle 5 Minuten
 </script>
