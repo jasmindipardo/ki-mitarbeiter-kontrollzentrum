@@ -263,16 +263,25 @@
     <input class="ifield" id="newJobName" placeholder="z.B. wöchentlicher-report" />
     <div class="field-label">Anweisung (was soll der Assistent tun?)</div>
     <textarea class="editor" id="newJobMsg" rows="3" placeholder="Schreibe einen wöchentlichen Bericht über..."></textarea>
-    <div class="field-label">Zeitplan</div>
-    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem">
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 1'">Mo 9 Uhr</button>
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 9 * * 5'">Fr 9 Uhr</button>
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 8 * * *'">tägl. 8 Uhr</button>
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 2 * * *'">tägl. 2 Uhr</button>
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 */3 * * *'">alle 3 Std</button>
-      <button class="quick-btn" style="font-size:.72rem;padding:.25rem .5rem" onclick="document.getElementById('newJobCron').value='0 6 * * 1'">Mo 6 Uhr</button>
+    <div class="field-label">Wann soll die Aufgabe laufen?</div>
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Klicke auf eine Schaltfläche — oder gib unten einen eigenen Zeitplan ein.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.6rem">
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 8 * * 1'">📅 Montag, 8 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 8 * * 5'">📅 Freitag, 8 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 8 * * 2'">📅 Dienstag, 8 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 7 * * *'">🌅 Täglich, 7 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 8 * * *'">🌅 Täglich, 8 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 2 * * *'">🌙 Täglich, 2 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 */3 * * *'">🔁 Alle 3 Stunden</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 1 1 * *'">📆 1. d. Monats</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 9 * * 1'">📅 Mo, 9 Uhr</button>
     </div>
-    <input class="ifield" id="newJobCron" placeholder="0 9 * * 1  (= Mo 9 Uhr)" />
+    <input class="ifield" id="newJobCron" placeholder="Eigener Zeitplan — oder oben klicken" />
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.6">
+      <strong>So liest du einen Zeitplan:</strong> Das Format ist <code>Minute Stunde Tag Monat Wochentag</code><br>
+      Beispiele: <code>0 8 * * *</code> = täglich um 8:00 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = jeden Montag um 9:00 Uhr &nbsp;|&nbsp; <code>0 1 1 * *</code> = am 1. jeden Monats um 1:00 Uhr<br>
+      <em>Tipp: Einfach eine der Schaltflächen oben klicken — der richtige Code wird automatisch eingetragen.</em>
+    </div>
     <div class="modal-footer">
       <button class="btn" onclick="document.getElementById('newJobModal').classList.remove('show')">Abbrechen</button>
       <button class="btn btn-primary" onclick="createJob()">Aufgabe anlegen</button>
@@ -500,14 +509,25 @@ function selectJob(id) {
     </div>
     ${errMsg?`<div style="padding:.5rem 1rem;font-size:.78rem;color:var(--red);border-bottom:1px solid var(--border)">Fehler: ${errMsg}</div>`:''}
     <div class="dcontent">
-      <div class="field-label">Zeitplan (bearbeitbar)</div>
-      <div style="display:flex;gap:.6rem;align-items:center;margin-bottom:.4rem">
-        <input class="ifield" id="jobSched" value="${j.schedule?.expr||j.schedule?.everyMs||''}" placeholder='z.B. 0 6 * * * (tägl. 6 Uhr) oder 1800000 (alle 30 Min)' style="margin-bottom:0;font-family:monospace;font-size:.82rem;flex:1" />
+      <div class="field-label">Wann soll diese Aufgabe laufen?</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.5rem">Aktuell: <strong style="color:var(--text)">${sched}</strong> &nbsp;·&nbsp; Schnell ändern:</div>
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 7 * * *'">🌅 tägl. 7 Uhr</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 8 * * *'">🌅 tägl. 8 Uhr</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 2 * * *'">🌙 tägl. 2 Uhr</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 9 * * 1'">📅 Mo. 9 Uhr</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 8 * * 5'">📅 Fr. 8 Uhr</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 1 1 * *'">📆 1. d. Monats</button>
+        <button class="quick-btn" style="font-size:.72rem;padding:.25rem .45rem" onclick="document.getElementById('jobSched').value='0 */3 * * *'">🔁 alle 3 Std</button>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:center;margin-bottom:.3rem">
+        <input class="ifield" id="jobSched" value="${j.schedule?.expr||j.schedule?.everyMs||''}" placeholder='Eigener Zeitplan — oder oben klicken' style="margin-bottom:0;font-family:monospace;font-size:.82rem;flex:1" />
         <button class="btn btn-sm" onclick="saveJobSched('${id}')">Speichern</button>
         <span class="hint" id="jobSchedHint">✓</span>
       </div>
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1.1rem">
-        Aktuell: <strong>${sched}</strong> &nbsp;·&nbsp; Beispiele: <code>0 6 * * *</code> = tägl. 6 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = Mo. 9 Uhr &nbsp;|&nbsp; <code>0 1 1 * *</code> = 1. d. Monats
+      <div style="font-size:.71rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5">
+        Format: <code>Minute Stunde Tag Monat Wochentag</code> — z.B. <code>0 8 * * *</code> = täglich 8 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = jeden Montag 9 Uhr<br>
+        <em>Tipp: Einfach eine Schaltfläche klicken — Code wird automatisch eingetragen, dann "Speichern".</em>
       </div>
       <div class="field-label">Anweisung (bearbeitbar)</div>
       <textarea class="editor" id="jobMsg" style="min-height:180px" spellcheck="false">${msg}</textarea>
