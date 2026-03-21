@@ -828,7 +828,7 @@ async function loadLogs(){
       const raw = typeof t === 'string' ? t : t.label;
       const clean = raw.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩✅❌]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,70);
       if(clean.length>2)
-        h+=`<span style="background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${clean}</span>`;
+        h+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${clean}</span>`;
     });
     h+='</div>';
   });
