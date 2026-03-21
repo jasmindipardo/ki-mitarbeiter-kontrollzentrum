@@ -152,7 +152,7 @@
     <span style="font-weight:600;color:var(--text)">Legende:</span>
     <span>🟢 <strong style="color:var(--text)">Grün</strong> — letzter Lauf erfolgreich</span>
     <span>🔴 <strong style="color:var(--text)">Rot</strong> — letzter Lauf fehlgeschlagen</span>
-    <span>⚪ <strong style="color:var(--text)">Weiß/Grau</strong> — noch nie gelaufen oder einmaliger Job</span>
+    <span>⚪ <strong style="color:var(--text)">Weiß</strong> — noch nie gelaufen oder einmaliger Job</span>
     <span style="margin-left:auto;color:var(--muted);font-style:italic">Aktiv/Pausiert = ob der Job eingeplant ist</span>
   </div>
   <div class="split">
@@ -274,13 +274,14 @@
       <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 2 * * *'">🌙 Täglich, 2 Uhr</button>
       <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 */3 * * *'">🔁 Alle 3 Stunden</button>
       <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 1 1 * *'">📆 1. d. Monats</button>
-      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 9 * * 1'">📅 Mo, 9 Uhr</button>
+      <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 17 * * *'">🌆 Täglich, 17 Uhr</button>
     </div>
     <input class="ifield" id="newJobCron" placeholder="Eigener Zeitplan — oder oben klicken" />
-    <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.6">
-      <strong>So liest du einen Zeitplan:</strong> Das Format ist <code>Minute Stunde Tag Monat Wochentag</code><br>
-      Beispiele: <code>0 8 * * *</code> = täglich um 8:00 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = jeden Montag um 9:00 Uhr &nbsp;|&nbsp; <code>0 1 1 * *</code> = am 1. jeden Monats um 1:00 Uhr<br>
-      <em>Tipp: Einfach eine der Schaltflächen oben klicken — der richtige Code wird automatisch eingetragen.</em>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.7;background:var(--surface2);padding:.5rem .7rem;border-radius:6px">
+      <strong>So funktioniert ein eigener Zeitplan:</strong><br>
+      Die zweite Zahl ist die <strong>Uhrzeit</strong>, die erste ist immer <strong>0</strong> (= volle Stunde).<br>
+      👉 17 Uhr täglich: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
+      <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen.</em>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="document.getElementById('newJobModal').classList.remove('show')">Abbrechen</button>
@@ -525,9 +526,11 @@ function selectJob(id) {
         <button class="btn btn-sm" onclick="saveJobSched('${id}')">Speichern</button>
         <span class="hint" id="jobSchedHint">✓</span>
       </div>
-      <div style="font-size:.71rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.5">
-        Format: <code>Minute Stunde Tag Monat Wochentag</code> — z.B. <code>0 8 * * *</code> = täglich 8 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = jeden Montag 9 Uhr<br>
-        <em>Tipp: Einfach eine Schaltfläche klicken — Code wird automatisch eingetragen, dann "Speichern".</em>
+      <div style="font-size:.71rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.7;background:var(--surface2);padding:.5rem .7rem;border-radius:6px">
+        <strong>So funktioniert ein eigener Zeitplan:</strong><br>
+        Die zweite Zahl ist die <strong>Uhrzeit</strong>, die erste ist immer <strong>0</strong> (= volle Stunde).<br>
+        👉 17 Uhr täglich: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
+        <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen, dann "Speichern".</em>
       </div>
       <div class="field-label">Anweisung (bearbeitbar)</div>
       <textarea class="editor" id="jobMsg" style="min-height:180px" spellcheck="false">${msg}</textarea>
