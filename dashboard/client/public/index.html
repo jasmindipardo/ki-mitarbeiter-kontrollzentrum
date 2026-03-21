@@ -148,6 +148,13 @@
 
 <!-- AUFGABEN -->
 <div id="page-crons" class="page">
+  <div style="margin-bottom:.75rem;padding:.6rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:.76rem;color:var(--muted);display:flex;gap:1.2rem;flex-wrap:wrap;align-items:center">
+    <span style="font-weight:600;color:var(--text)">Legende:</span>
+    <span>🟢 <strong style="color:var(--text)">Grün</strong> — letzter Lauf erfolgreich</span>
+    <span>🔴 <strong style="color:var(--text)">Rot</strong> — letzter Lauf fehlgeschlagen</span>
+    <span>⚪ <strong style="color:var(--text)">Weiß/Grau</strong> — noch nie gelaufen oder einmaliger Job</span>
+    <span style="margin-left:auto;color:var(--muted);font-style:italic">Aktiv/Pausiert = ob der Job eingeplant ist</span>
+  </div>
   <div class="split">
     <div class="sidebar">
       <div class="sidebar-title">
@@ -159,6 +166,7 @@
     <div class="main-panel" id="cronDetail"><div class="placeholder">← Aufgabe auswählen</div></div>
   </div>
 </div>
+
 
 <!-- ZUGANGSDATEN -->
 <div id="page-env" class="page">
@@ -486,13 +494,21 @@ function selectJob(id) {
       <button class="btn btn-sm btn-danger" onclick="deleteJob('${id}')">✕</button>
     </div>
     <div class="meta-grid">
-      <div class="row" style="padding:.35rem 0"><span class="label">Zeitplan</span><span class="val">${sched}</span></div>
       <div class="row" style="padding:.35rem 0"><span class="label">Letzter Status</span><span class="badge ${lastStatus==='ok'?'badge-green':lastStatus==='error'?'badge-red':'badge-muted'}">${lastStatus}</span></div>
       <div class="row" style="padding:.35rem 0"><span class="label">Letzter Lauf</span><span class="val">${lastRun}</span></div>
       <div class="row" style="padding:.35rem 0"><span class="label">Nächster Lauf</span><span class="val">${nextRun}</span></div>
     </div>
     ${errMsg?`<div style="padding:.5rem 1rem;font-size:.78rem;color:var(--red);border-bottom:1px solid var(--border)">Fehler: ${errMsg}</div>`:''}
     <div class="dcontent">
+      <div class="field-label">Zeitplan (bearbeitbar)</div>
+      <div style="display:flex;gap:.6rem;align-items:center;margin-bottom:.4rem">
+        <input class="ifield" id="jobSched" value="${j.schedule?.expr||j.schedule?.everyMs||''}" placeholder='z.B. 0 6 * * * (tägl. 6 Uhr) oder 1800000 (alle 30 Min)' style="margin-bottom:0;font-family:monospace;font-size:.82rem;flex:1" />
+        <button class="btn btn-sm" onclick="saveJobSched('${id}')">Speichern</button>
+        <span class="hint" id="jobSchedHint">✓</span>
+      </div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:1.1rem">
+        Aktuell: <strong>${sched}</strong> &nbsp;·&nbsp; Beispiele: <code>0 6 * * *</code> = tägl. 6 Uhr &nbsp;|&nbsp; <code>0 9 * * 1</code> = Mo. 9 Uhr &nbsp;|&nbsp; <code>0 1 1 * *</code> = 1. d. Monats
+      </div>
       <div class="field-label">Anweisung (bearbeitbar)</div>
       <textarea class="editor" id="jobMsg" style="min-height:180px" spellcheck="false">${msg}</textarea>
       <div style="display:flex;justify-content:flex-end;align-items:center;gap:.75rem;margin-top:.75rem">
@@ -519,6 +535,16 @@ async function saveJobMsg(id){
   const r=await api(`/api/crons/${id}/message`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
   if(r.ok){showHint('jobSaveHint');toast('Anweisung gespeichert');const cr=await api('/api/crons?fresh=1');allJobs=cr.jobs||[];}
   else toast(r.error||'Fehler','err');
+}
+async function saveJobSched(id){
+  const val=document.getElementById('jobSched')?.value?.trim();
+  if(!val){toast('Bitte Zeitplan eingeben','err');return;}
+  let schedule;
+  if(/^\d+$/.test(val)){schedule={kind:'every',everyMs:parseInt(val)};}
+  else{schedule={kind:'cron',expr:val,tz:'Europe/Berlin'};}
+  const r=await api(`/api/crons/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({schedule})});
+  if(r.ok||r.id||r.jobId||r.enabled!==undefined){showHint('jobSchedHint');toast('Zeitplan gespeichert');const cr=await api('/api/crons?fresh=1');allJobs=cr.jobs||[];selectJob(id);}
+  else toast(r.error||r.err||r.message||'Fehler beim Speichern','err');
 }
 function showNewJobModal(){document.getElementById('newJobModal').classList.add('show');}
 function useTemplate(name,label,msg,cron){
