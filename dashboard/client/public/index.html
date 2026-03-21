@@ -408,19 +408,34 @@ function toast(msg, type='ok') {
 }
 function showHint(id) { const h=document.getElementById(id); if(h){h.classList.add('show');setTimeout(()=>h.classList.remove('show'),2000);} }
 const LOADING_HTML = '<div style="padding:1.25rem 1rem;color:var(--muted);font-size:.83rem;display:flex;align-items:center;gap:.6rem"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite"></span> Wird geladen …</div>';
+let _bannerTimer = null;
+function showLoadBanner(text) {
+  const b = document.getElementById('loadBanner');
+  if (!b) return;
+  b.textContent = text || '⏳ Wird geladen — einen Moment bitte …';
+  b.classList.remove('hidden');
+  clearTimeout(_bannerTimer);
+}
+function hideLoadBanner() {
+  const b = document.getElementById('loadBanner');
+  if (!b) return;
+  _bannerTimer = setTimeout(() => b.classList.add('hidden'), 300);
+}
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if (btn) btn.classList.add('active');
   else document.querySelectorAll('.tab').forEach(t=>{ if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'")) t.classList.add('active'); });
-  // Lade-Spinner sofort zeigen bevor Daten kommen
-  if (id==='crons') { document.getElementById('cronList').innerHTML=LOADING_HTML; loadCronList(); }
-  if (id==='env') { document.getElementById('envTable').innerHTML=LOADING_HTML; loadEnvTable(); }
-  if (id==='docs') { document.getElementById('docsList').innerHTML=LOADING_HTML; loadDocsList(''); }
-  if (id==='services') { document.getElementById('servicesContent').innerHTML=LOADING_HTML; loadServices(); }
-  if (id==='logs') { document.getElementById('logsContent').innerHTML=LOADING_HTML; loadLogs(); startLogsAutoRefresh(); }
-  else stopLogsAutoRefresh();
+  // Lade-Spinner + Banner sofort zeigen bevor Daten kommen
+  showLoadBanner('⏳ Wird geladen — einen Moment bitte …');
+  if (id==='crons') { document.getElementById('cronList').innerHTML=LOADING_HTML; loadCronList().finally(hideLoadBanner); }
+  else if (id==='env') { document.getElementById('envTable').innerHTML=LOADING_HTML; loadEnvTable().finally(hideLoadBanner); }
+  else if (id==='docs') { document.getElementById('docsList').innerHTML=LOADING_HTML; loadDocsList('').finally(hideLoadBanner); }
+  else if (id==='services') { document.getElementById('servicesContent').innerHTML=LOADING_HTML; loadServices().finally(hideLoadBanner); }
+  else if (id==='logs') { document.getElementById('logsContent').innerHTML=LOADING_HTML; loadLogs().finally(hideLoadBanner); startLogsAutoRefresh(); }
+  else { hideLoadBanner(); }
+  if (id!=='logs') stopLogsAutoRefresh();
 }
 function cronToText(expr) {
   if (!expr) return '–';
@@ -850,10 +865,9 @@ function stopLogsAutoRefresh() {
 }
 
 async function loadAll(){
+  showLoadBanner('⏳ Kontrollzentrum wird geladen — einen Moment bitte …');
   await loadOverview();
-  // Lade-Banner ausblenden sobald Übersicht geladen
-  const banner = document.getElementById('loadBanner');
-  if (banner) { banner.classList.add('hidden'); setTimeout(()=>banner.remove(), 500); }
+  hideLoadBanner();
 }
 loadAll();
 setInterval(loadAll, 300000); // alle 5 Minuten
