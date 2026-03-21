@@ -778,40 +778,46 @@ async function loadServices(){
 // ── PROTOKOLL ────────────────────────────────
 async function loadLogs(){
   const el=document.getElementById('logsContent');
-  
   const data=await api('/api/logs');
-  const logs=data.logs||[];
-  if(!logs.length){el.innerHTML='<div style="padding:1rem;color:var(--muted)">Noch keine Aktivitäten in den letzten 24h</div>';return;}
+  const byDay=data.byDay||[];
+  const cronRuns=data.cronRuns||[];
 
-  // Scroll-Position merken
-  const logsDiv = el.querySelector('div[style*="overflow"]');
-  const scrollTop = logsDiv ? logsDiv.scrollTop : 0;
+  if(!byDay.length && !cronRuns.length){
+    el.innerHTML='<div style="padding:1rem;color:var(--muted)">Keine Aktivitäten in den letzten 10 Tagen gefunden.</div>';
+    return;
+  }
 
-  let h='<div style="max-height:600px;overflow-y:auto" id="logsScroll">';
-  let lastDate='';
-  logs.forEach(l=>{
-    if(l.date && l.date !== lastDate){
-      const d=new Date(l.date);
-      const label=l.date===new Date().toISOString().slice(0,10)?'Heute':d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
-      h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0">${label}</div>`;
-      lastDate=l.date;
-    }
-    const isHeader=l.type==='header';
-    const isSub=l.type==='sub';
-    const isTask=l.type==='task';
-    const isCron=l.type==='cron';
-    const isErr=l.text?.includes('❌');
-    const bg=isHeader?'var(--surface2)':'transparent';
-    const fw=isHeader?'600':'400';
-    const fc=isErr?'var(--red)':isHeader?'var(--text)':isCron?'var(--accent)':'var(--muted)';
-    const pl=isHeader?'1rem':isSub?'1.75rem':'2.25rem';
-    h+=`<div style="padding:.35rem ${pl};border-bottom:1px solid rgba(51,65,85,.3);font-size:${isHeader?'.85':'.8'}rem;background:${bg};font-weight:${fw};color:${fc}">${l.text}</div>`;
+  let h='<div style="max-height:700px;overflow-y:auto">';
+
+  // Heutige Cron-Läufe oben
+  if(cronRuns.length){
+    h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0">⏰ Heute ausgeführte Aufgaben</div>`;
+    cronRuns.forEach(c=>{
+      const icon=c.ok?'✅':'❌';
+      h+=`<div style="padding:.35rem 1.5rem;border-bottom:1px solid rgba(51,65,85,.3);font-size:.82rem;color:var(--muted)">${icon} ${c.name} — ${c.time}</div>`;
+    });
+  }
+
+  // Pro Tag: Themen als Tags
+  byDay.forEach((day,i)=>{
+    const isToday = i===0;
+    const label = isToday ? '📅 Heute — '+day.label : '📅 '+day.label;
+    h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0;display:flex;justify-content:space-between;align-items:center">
+      <span>${label}</span>
+      <a href="#" onclick="event.preventDefault();showPage('docs');setTimeout(()=>{selectDocByPath('${day.file}')},300)" style="font-size:.7rem;color:var(--muted);text-decoration:underline">Datei öffnen →</a>
+    </div>`;
+    h+='<div style="padding:.5rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem">';
+    day.topics.forEach(t=>{
+      // Emojis & Zeitstempel raus für sauberes Tag
+      const clean=t.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,60);
+      if(clean.length>2)
+        h+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:var(--text)">${clean}</span>`;
+    });
+    h+='</div>';
   });
+
   h+='</div>';
   el.innerHTML=h;
-  // Scroll-Position wiederherstellen
-  const newScroll = el.querySelector('#logsScroll');
-  if (newScroll && scrollTop) newScroll.scrollTop = scrollTop;
 }
 
 // ── NACHRICHT / SCHNELLBEFEHLE ───────────────

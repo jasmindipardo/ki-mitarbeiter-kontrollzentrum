@@ -537,100 +537,74 @@ app.get('/api/logs', requireAuth, (req, res) => {
   const now = new Date();
   const tz = 'Europe/Berlin';
   function toBerlinDate(d) { return d.toLocaleDateString('sv-SE', {timeZone: tz}); }
-  function toBerlinTime(d) {
-    return d.toLocaleTimeString('de-DE', {timeZone: tz, hour:'2-digit', minute:'2-digit'}) + ' Uhr';
-  }
-  function utcToMez(timeStr) {
-    // "21:00 UTC" → "22:00 Uhr", "00:00 UTC" → "01:00 Uhr"
-    const m = timeStr.match(/(\d{1,2}):(\d{2})\s*UTC/);
-    if (!m) return timeStr.replace(/UTC/, '').trim() + ' Uhr';
-    const h = (parseInt(m[1]) + 1) % 24;
-    return String(h).padStart(2,'0') + ':' + m[2] + ' Uhr';
-  }
-  function timeToMs(dateStr, timeStr) {
-    // "21:11 Uhr" → ms für Sortierung
-    const t = timeStr.replace(' Uhr','').replace(' UTC','');
-    const parts = t.split(':');
-    if (parts.length < 2) return 0;
-    const h = parseInt(parts[0]);
-    const min = parseInt(parts[1]);
-    const [y,mo,d] = dateStr.split('-').map(Number);
-    return Date.UTC(y, mo-1, d, h, min);
+  function toBerlinLabel(dateStr) {
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const date = new Date(Date.UTC(y,m-1,d,12,0,0));
+    return date.toLocaleDateString('de-DE', {timeZone: tz, weekday:'long', day:'numeric', month:'long'});
   }
 
-  const today = toBerlinDate(now);
-  const yesterday = toBerlinDate(new Date(now - 86400000));
-  const allEntries = [];
+  // Letzte 10 Tage sammeln
+  const days = [];
+  for (let i = 0; i < 10; i++) {
+    days.push(toBerlinDate(new Date(now - i * 86400000)));
+  }
 
-  // 1) Memory-Dateien lesen
-  [today, yesterday].forEach(dateStr => {
+  const byDay = [];
+
+  days.forEach(dateStr => {
     const memFile = path.join(WS_PATH, 'memory', dateStr + '.md');
     if (!fs.existsSync(memFile)) return;
     try {
-      const lines = fs.readFileSync(memFile, 'utf8').split('\n');
-      let skip = false;
-      let curTime = '';
-      let sortMs = 0;
+      const content = fs.readFileSync(memFile, 'utf8');
+      const lines = content.split('\n');
+      const topics = [];
       lines.forEach(line => {
-        if (line.startsWith('## ')) {
-          const h = line.slice(3).trim();
-          skip = h.includes('Weitermachen');
-          if (skip) return;
-          // Zeit extrahieren
-          const mezM = h.match(/\((\d{1,2}:\d{2})\s*MEZ\)/);
-          const utcM = h.match(/(\d{1,2}:\d{2})\s*UTC/);
-          if (mezM) {
-            curTime = mezM[1] + ' Uhr';
-          } else if (utcM) {
-            curTime = utcToMez(utcM[0]);
-          } else {
-            curTime = '';
-          }
-          sortMs = curTime ? timeToMs(dateStr, curTime) : 0;
-          const label = h.replace(/\s*(\(\d{1,2}:\d{2}\s*MEZ\)|\d{1,2}:\d{2}\s*UTC.*)$/,'').trim();
-          allEntries.push({ date: dateStr, time: curTime, type: 'header', sortMs, text: label + (curTime ? ' — ' + curTime : '') });
-        } else if (skip) {
-          return;
-        } else if (line.startsWith('### ')) {
-          const sub = line.slice(4).trim();
-          if (sub && !sub.includes('Bewusst') && sub.length > 2)
-            allEntries.push({ date: dateStr, time: curTime, type: 'sub', sortMs, text: sub });
-        } else if (/^\s*[-*]\s*/.test(line)) {
-          const t = line.replace(/^\s*[-*]\s*/, '').trim();
-          // Reine URLs überspringen
-          if (!t || t.match(/^https?:\/\//)) return;
-          // Nur wenn informativer Inhalt
-          if (t.length > 5 && !t.startsWith('Kein Content'))
-            allEntries.push({ date: dateStr, time: curTime, type: 'item', sortMs, text: t.slice(0,100) });
+        if (line.startsWith('## ') && !line.includes('Weitermachen') && !line.includes('⏩')) {
+          // Zeitangaben raus, sauber kürzen
+          let label = line.slice(3).trim()
+            .replace(/\s*\(\d{1,2}:\d{2}\s*(MEZ|UTC)\)/g, '')
+            .replace(/\s*\d{1,2}:\d{2}\s*(MEZ|UTC)/g, '')
+            .replace(/\s*—\s*\d{2}\.\d{2}\.\d{4}/, '')
+            .trim();
+          if (label && label.length > 2) topics.push(label);
         }
       });
+      if (topics.length > 0) {
+        byDay.push({
+          date: dateStr,
+          label: toBerlinLabel(dateStr),
+          topics,
+          file: `memory/${dateStr}.md`
+        });
+      }
     } catch {}
   });
 
-  // 2) Cron-Läufe letzte 24h
+  // Cron-Läufe heute
+  const cronRuns = [];
   try {
     const cronRaw = run('openclaw cron list --json 2>/dev/null');
     if (cronRaw) {
       const data = JSON.parse(cronRaw);
+      const todayStr = toBerlinDate(now);
       (data.jobs || []).forEach(j => {
         const ms = j.state && j.state.lastRunAtMs;
         if (ms && ms > now - 86400000) {
           const d = new Date(ms);
           const dateStr = toBerlinDate(d);
-          const timeStr = toBerlinTime(d);
-          const ok = j.state.lastStatus === 'ok';
-          allEntries.push({ date: dateStr, time: timeStr, type: 'cron', sortMs: ms,
-            text: (ok ? '✅' : '❌') + ' ' + (j.name || j.id) });
+          if (dateStr === todayStr) {
+            const timeStr = d.toLocaleTimeString('de-DE', {timeZone: tz, hour:'2-digit', minute:'2-digit'}) + ' Uhr';
+            const ok = j.state.lastStatus === 'ok';
+            cronRuns.push({ name: j.name || j.id, time: timeStr, ok });
+          }
         }
       });
     }
   } catch {}
 
-  // 3) Sortieren: neueste zuerst
-  allEntries.sort((a, b) => (b.sortMs || 0) - (a.sortMs || 0));
-
-  res.json({ logs: allEntries.slice(0, 100) });
+  res.json({ byDay, cronRuns });
 });
+
 
 
 // ─────────────────────────────────────────
