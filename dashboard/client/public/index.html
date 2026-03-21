@@ -11,6 +11,7 @@
     header{background:var(--surface);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:101}
     .dot{width:9px;height:9px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes spin{to{transform:rotate(360deg)}}
     header h1{font-size:1.1rem;font-weight:600}
     .header-sub{color:var(--muted);font-size:.8rem}
     .header-right{margin-left:auto;display:flex;gap:.5rem;align-items:center}
@@ -391,17 +392,19 @@ function toast(msg, type='ok') {
   setTimeout(()=>el.className='',2500);
 }
 function showHint(id) { const h=document.getElementById(id); if(h){h.classList.add('show');setTimeout(()=>h.classList.remove('show'),2000);} }
+const LOADING_HTML = '<div style="padding:1.25rem 1rem;color:var(--muted);font-size:.83rem;display:flex;align-items:center;gap:.6rem"><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite"></span> Wird geladen …</div>';
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if (btn) btn.classList.add('active');
   else document.querySelectorAll('.tab').forEach(t=>{ if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'")) t.classList.add('active'); });
-  if (id==='crons') loadCronList();
-  if (id==='env') loadEnvTable();
-  if (id==='docs') loadDocsList('');
-  if (id==='services') loadServices();
-  if (id==='logs') { loadLogs(); startLogsAutoRefresh(); }
+  // Lade-Spinner sofort zeigen bevor Daten kommen
+  if (id==='crons') { document.getElementById('cronList').innerHTML=LOADING_HTML; loadCronList(); }
+  if (id==='env') { document.getElementById('envTable').innerHTML=LOADING_HTML; loadEnvTable(); }
+  if (id==='docs') { document.getElementById('docsList').innerHTML=LOADING_HTML; loadDocsList(''); }
+  if (id==='services') { document.getElementById('servicesContent').innerHTML=LOADING_HTML; loadServices(); }
+  if (id==='logs') { document.getElementById('logsContent').innerHTML=LOADING_HTML; loadLogs(); startLogsAutoRefresh(); }
   else stopLogsAutoRefresh();
 }
 function cronToText(expr) {
