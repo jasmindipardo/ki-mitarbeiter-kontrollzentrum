@@ -167,18 +167,22 @@
         </span>
       </div>
     </div>
-    <!-- Zeitplan-Referenz -->
+    <!-- Zeitplan-Referenz (vollständig) -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.65rem 1rem;font-size:.76rem;color:var(--muted)">
-      <div style="font-weight:600;color:var(--text);margin-bottom:.4rem">🕐 Zeitplan-Referenz (5 Stellen)</div>
-      <div style="font-family:monospace;background:var(--surface2);padding:.35rem .55rem;border-radius:4px;font-size:.72rem;white-space:pre;line-height:1.6">  0    8    *    *    1
+      <div style="font-weight:600;color:var(--text);margin-bottom:.4rem">🕐 So liest du einen Zeitplan — 5 Stellen, immer:</div>
+      <div style="font-family:monospace;background:var(--surface2);padding:.4rem .6rem;border-radius:4px;font-size:.72rem;white-space:pre;line-height:1.6">  0    8    *    *    1
   ↑    ↑    ↑    ↑    ↑
-  Min  Uhr  Tag  Mon  Wochentag
-                      1=Mo…5=Fr</div>
-      <div style="margin-top:.3rem;line-height:1.6">
-        <span><code>0 8 * * *</code> tägl. 8 Uhr</span> &nbsp;·&nbsp;
-        <span><code>0 9 * * 1</code> Mo. 9 Uhr</span><br>
-        <span><code>0 1 1 * *</code> 1. d. Monats</span> &nbsp;·&nbsp;
-        <span><code>1800000</code> alle 30 Min</span>
+  │    │    │    │    └─ Wochentag: 1=Mo 2=Di 3=Mi 4=Do 5=Fr 6=Sa 0=So
+  │    │    │    └────── Monat (1–12 oder * = jeden Monat)
+  │    │    └─────────── Tag (1–31 oder * = jeden Tag)
+  │    └──────────────── Uhrzeit (0–23)
+  └───────────────────── Minute:  0 = volle Stunde (z.B. 8:00)
+                                 15 = Viertel nach  (z.B. 8:15)
+                                 30 = halbe Stunde  (z.B. 8:30)
+                                 45 = Viertel vor   (z.B. 8:45)</div>
+      <div style="margin-top:.4rem;line-height:1.7">
+        <strong>* bedeutet "immer/egal"</strong> &nbsp;·&nbsp; <strong>*/3 bedeutet "alle 3"</strong><br>
+        👉 tägl. 8 Uhr: <code>0 8 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. d. Monats: <code>0 1 1 * *</code> &nbsp;|&nbsp; alle 30 Min: <code>1800000</code>
       </div>
     </div>
   </div>
