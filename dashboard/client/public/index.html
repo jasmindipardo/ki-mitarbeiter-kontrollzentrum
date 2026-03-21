@@ -809,7 +809,9 @@ async function loadLogs(){
     h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0">⏰ Heute ausgeführte Aufgaben</div>`;
     cronRuns.forEach(c=>{
       const icon=c.ok?'✅':'❌';
-      h+=`<div style="padding:.35rem 1.5rem;border-bottom:1px solid rgba(51,65,85,.3);font-size:.82rem;color:var(--muted)">${icon} ${c.name} — ${c.time}</div>`;
+      h+=`<div style="padding:.4rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:1px solid rgba(51,65,85,.3)">
+        <span style="background:transparent;border:1px solid rgba(148,163,184,.4);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:var(--muted)">${icon} ${c.name} — ${c.time}</span>
+      </div>`;
     });
   }
 
@@ -827,11 +829,11 @@ async function loadLogs(){
       const level = typeof t === 'object' ? t.level : 'main';
       const clean = raw.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩✅❌]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,70);
       if(clean.length>2){
-        const bg = level==='sub' ? 'transparent' : 'var(--surface2)';
-        const border = level==='sub' ? '1px solid rgba(148,163,184,.3)' : '1px solid var(--border)';
-        const fc = level==='sub' ? 'var(--muted)' : 'var(--text)';
-        const prefix = level==='sub' ? '↳ ' : '';
-        h+=`<span style="background:${bg};border:${border};border-radius:999px;padding:.2rem .65rem;font-size:${level==='sub'?'.72':'.75'}rem;color:${fc}">${prefix}${clean}</span>`;
+        const bg = level==='sub' ? 'var(--surface2)' : 'var(--accent)';
+        const border = level==='sub' ? '1px solid var(--border)' : '1px solid var(--accent)';
+        const fc = '#fff';
+        const fs = level==='sub' ? '.72' : '.75';
+        h+=`<span style="background:${bg};border:${border};border-radius:999px;padding:.2rem .65rem;font-size:${fs}rem;color:${fc}">${clean}</span>`;
       }
     });
     h+='</div>';
