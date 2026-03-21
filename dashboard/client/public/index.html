@@ -823,10 +823,16 @@ async function loadLogs(){
     </div>`;
     h+='<div style="padding:.5rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem">';
     day.topics.forEach(t=>{
-      // Emojis & Zeitstempel raus für sauberes Tag
-      const clean=t.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,60);
-      if(clean.length>2)
-        h+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:var(--text)">${clean}</span>`;
+      const raw = typeof t === 'string' ? t : t.label;
+      const level = typeof t === 'object' ? t.level : 'main';
+      const clean = raw.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩✅❌]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,70);
+      if(clean.length>2){
+        const bg = level==='sub' ? 'transparent' : 'var(--surface2)';
+        const border = level==='sub' ? '1px solid rgba(148,163,184,.3)' : '1px solid var(--border)';
+        const fc = level==='sub' ? 'var(--muted)' : 'var(--text)';
+        const prefix = level==='sub' ? '↳ ' : '';
+        h+=`<span style="background:${bg};border:${border};border-radius:999px;padding:.2rem .65rem;font-size:${level==='sub'?'.72':'.75'}rem;color:${fc}">${prefix}${clean}</span>`;
+      }
     });
     h+='</div>';
   });

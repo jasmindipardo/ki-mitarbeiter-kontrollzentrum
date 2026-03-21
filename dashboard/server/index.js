@@ -558,15 +558,22 @@ app.get('/api/logs', requireAuth, (req, res) => {
       const content = fs.readFileSync(memFile, 'utf8');
       const lines = content.split('\n');
       const topics = [];
+      const seen = new Set();
       lines.forEach(line => {
-        if (line.startsWith('## ') && !line.includes('Weitermachen') && !line.includes('⏩')) {
-          // Zeitangaben raus, sauber kürzen
-          let label = line.slice(3).trim()
+        const isH2 = line.startsWith('## ') && !line.includes('Weitermachen') && !line.includes('⏩') && !line.includes('Memory-Sync') && !line.includes('Memory Sync');
+        const isH3 = line.startsWith('### ') && !line.includes('Bewusst nicht') && !line.includes('Weitermachen');
+        if (isH2 || isH3) {
+          const depth = isH2 ? 3 : 4;
+          let label = line.slice(depth).trim()
             .replace(/\s*\(\d{1,2}:\d{2}\s*(MEZ|UTC)\)/g, '')
-            .replace(/\s*\d{1,2}:\d{2}\s*(MEZ|UTC)/g, '')
+            .replace(/\s*\d{1,2}:\d{2}\s*(MEZ|UTC).*/g, '')
             .replace(/\s*—\s*\d{2}\.\d{2}\.\d{4}/, '')
+            .replace(/^\d{2}:\d{2}\s*–\s*/, '')
             .trim();
-          if (label && label.length > 2) topics.push(label);
+          if (label && label.length > 2 && !seen.has(label)) {
+            seen.add(label);
+            topics.push({ label, level: isH2 ? 'main' : 'sub' });
+          }
         }
       });
       if (topics.length > 0) {
