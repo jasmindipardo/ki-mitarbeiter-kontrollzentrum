@@ -291,7 +291,10 @@
   │    │    │    └────── Monat (1–12 oder * = jeden Monat)
   │    │    └─────────── Tag (1–31 oder * = jeden Tag)
   │    └──────────────── Uhrzeit (0–23)
-  └───────────────────── Minute (immer 0 = volle Stunde)</div>
+  └───────────────────── Minute:  0 = volle Stunde (z.B. 8:00)
+                                 15 = Viertel nach  (z.B. 8:15)
+                                 30 = halbe Stunde  (z.B. 8:30)
+                                 45 = Viertel vor   (z.B. 8:45)</div>
       <strong>* bedeutet "immer/egal"</strong> &nbsp;·&nbsp; <strong>*/3 bedeutet "alle 3"</strong> (z.B. alle 3 Stunden)<br>
       👉 tägl. 17 Uhr: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
       <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen.</em>
@@ -551,7 +554,10 @@ function selectJob(id) {
   │    │    │    └────── Monat (1–12 oder * = jeden Monat)
   │    │    └─────────── Tag (1–31 oder * = jeden Tag)
   │    └──────────────── Uhrzeit (0–23)
-  └───────────────────── Minute (immer 0 = volle Stunde)</div>
+  └───────────────────── Minute:  0 = volle Stunde (z.B. 8:00)
+                                 15 = Viertel nach  (z.B. 8:15)
+                                 30 = halbe Stunde  (z.B. 8:30)
+                                 45 = Viertel vor   (z.B. 8:45)</div>
         <strong>* bedeutet "immer/egal"</strong> &nbsp;·&nbsp; <strong>*/3 bedeutet "alle 3"</strong> (z.B. alle 3 Stunden)<br>
         👉 tägl. 17 Uhr: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
         <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen, dann "Speichern".</em>
