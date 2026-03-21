@@ -277,10 +277,17 @@
       <button class="quick-btn" style="font-size:.78rem;padding:.35rem .5rem;text-align:center" onclick="document.getElementById('newJobCron').value='0 17 * * *'">🌆 Täglich, 17 Uhr</button>
     </div>
     <input class="ifield" id="newJobCron" placeholder="Eigener Zeitplan — oder oben klicken" />
-    <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.7;background:var(--surface2);padding:.5rem .7rem;border-radius:6px">
-      <strong>So funktioniert ein eigener Zeitplan:</strong><br>
-      Die zweite Zahl ist die <strong>Uhrzeit</strong>, die erste ist immer <strong>0</strong> (= volle Stunde).<br>
-      👉 17 Uhr täglich: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.7;background:var(--surface2);padding:.6rem .8rem;border-radius:6px">
+      <strong style="color:var(--text)">So liest du einen eigenen Zeitplan — 5 Stellen, immer:</strong><br>
+      <div style="font-family:monospace;background:var(--surface);padding:.4rem .7rem;border-radius:4px;margin:.3rem 0;font-size:.78rem;white-space:pre">  0    8    *    *    1
+  ↑    ↑    ↑    ↑    ↑
+  │    │    │    │    └─ Wochentag: 1=Mo 2=Di 3=Mi 4=Do 5=Fr 6=Sa 0=So
+  │    │    │    └────── Monat (1–12 oder * = jeden Monat)
+  │    │    └─────────── Tag (1–31 oder * = jeden Tag)
+  │    └──────────────── Uhrzeit (0–23)
+  └───────────────────── Minute (immer 0 = volle Stunde)</div>
+      <strong>* bedeutet "immer/egal"</strong> &nbsp;·&nbsp; <strong>*/3 bedeutet "alle 3"</strong> (z.B. alle 3 Stunden)<br>
+      👉 tägl. 17 Uhr: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
       <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen.</em>
     </div>
     <div class="modal-footer">
@@ -526,10 +533,17 @@ function selectJob(id) {
         <button class="btn btn-sm" onclick="saveJobSched('${id}')">Speichern</button>
         <span class="hint" id="jobSchedHint">✓</span>
       </div>
-      <div style="font-size:.71rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.7;background:var(--surface2);padding:.5rem .7rem;border-radius:6px">
-        <strong>So funktioniert ein eigener Zeitplan:</strong><br>
-        Die zweite Zahl ist die <strong>Uhrzeit</strong>, die erste ist immer <strong>0</strong> (= volle Stunde).<br>
-        👉 17 Uhr täglich: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
+      <div style="font-size:.71rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.7;background:var(--surface2);padding:.6rem .8rem;border-radius:6px">
+        <strong style="color:var(--text)">So liest du einen eigenen Zeitplan — 5 Stellen, immer:</strong><br>
+        <div style="font-family:monospace;background:var(--surface);padding:.4rem .7rem;border-radius:4px;margin:.3rem 0;font-size:.78rem;white-space:pre">  0    8    *    *    1
+  ↑    ↑    ↑    ↑    ↑
+  │    │    │    │    └─ Wochentag: 1=Mo 2=Di 3=Mi 4=Do 5=Fr 6=Sa 0=So
+  │    │    │    └────── Monat (1–12 oder * = jeden Monat)
+  │    │    └─────────── Tag (1–31 oder * = jeden Tag)
+  │    └──────────────── Uhrzeit (0–23)
+  └───────────────────── Minute (immer 0 = volle Stunde)</div>
+        <strong>* bedeutet "immer/egal"</strong> &nbsp;·&nbsp; <strong>*/3 bedeutet "alle 3"</strong> (z.B. alle 3 Stunden)<br>
+        👉 tägl. 17 Uhr: <code>0 17 * * *</code> &nbsp;|&nbsp; Mo. 9 Uhr: <code>0 9 * * 1</code> &nbsp;|&nbsp; 1. des Monats: <code>0 1 1 * *</code><br>
         <em>Tipp: Einfach oben klicken — Code wird automatisch eingetragen, dann "Speichern".</em>
       </div>
       <div class="field-label">Anweisung (bearbeitbar)</div>
