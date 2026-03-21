@@ -807,12 +807,12 @@ async function loadLogs(){
   // Heutige Cron-Läufe oben
   if(cronRuns.length){
     h+=`<div style="padding:.5rem 1rem;background:var(--surface2);font-size:.75rem;font-weight:600;color:var(--accent);position:sticky;top:0">⏰ Heute ausgeführte Aufgaben</div>`;
+    h+=`<div style="padding:.5rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:1px solid rgba(51,65,85,.3)">`;
     cronRuns.forEach(c=>{
-      const icon=c.ok?'✅':'❌';
-      h+=`<div style="padding:.4rem 1rem;display:flex;flex-wrap:wrap;gap:.35rem;border-bottom:1px solid rgba(51,65,85,.3)">
-        <span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${icon} ${c.name} — ${c.time}</span>
-      </div>`;
+      const status=c.ok?'✓':'✗';
+      h+=`<span style="background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${status} ${c.name} — ${c.time}</span>`;
     });
+    h+=`</div>`;
   }
 
   // Pro Tag: Themen als Tags
@@ -828,7 +828,7 @@ async function loadLogs(){
       const raw = typeof t === 'string' ? t : t.label;
       const clean = raw.replace(/^[🌙☀️📊🔒💡🔄✉️📅🎯⏩✅❌]+\s*/,'').replace(/\s*\(.*?\)$/,'').trim().slice(0,70);
       if(clean.length>2)
-        h+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${clean}</span>`;
+        h+=`<span style="background:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:.2rem .65rem;font-size:.75rem;color:#fff">${clean}</span>`;
     });
     h+='</div>';
   });
