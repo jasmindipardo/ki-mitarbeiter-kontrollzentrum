@@ -9,7 +9,16 @@ Verwalte deinen KI-Assistenten bequem im Browser – von jedem Gerät, von über
 Sobald das Kontrollzentrum eingerichtet ist, öffnest du einfach einen Link im Browser und siehst dein persönliches Dashboard:
 
 **⏰ Automatische Aufgaben (Cron Jobs)**
-Dein KI-Assistent erledigt viele Dinge automatisch – zum Beispiel morgens einen Bericht schicken oder abends Ideen sammeln. Hier siehst du alle diese Aufgaben auf einen Blick, kannst sie ein- und ausschalten oder sofort starten.
+Dein KI-Assistent erledigt viele Dinge automatisch – zum Beispiel morgens einen Bericht schicken oder abends Ideen sammeln. Hier siehst du alle diese Aufgaben auf einen Blick, kannst sie ein- und ausschalten, sofort starten oder den Zeitplan anpassen.
+
+**Legende der Statussymbole:**
+| Symbol | Bedeutung |
+|---|---|
+| 🟢 Grün | Letzter Lauf erfolgreich |
+| 🔴 Rot | Letzter Lauf fehlgeschlagen |
+| ⚪ Weiß/Grau | Noch nie gelaufen oder einmaliger Job ohne Wiederholung |
+| Badge „aktiv" | Job ist eingeplant und läuft automatisch |
+| Badge „pausiert" | Job ist deaktiviert und läuft nicht |
 
 **🔑 Zugangsdaten (Env-Variablen)**
 Damit dein Assistent mit anderen Tools zusammenarbeiten kann (z. B. ClickUp, Brevo), braucht er bestimmte Zugangsdaten. Die trägst du hier sicher ein – sie werden niemals im Klartext angezeigt.
