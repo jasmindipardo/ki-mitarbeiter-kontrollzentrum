@@ -740,8 +740,7 @@ function renderDocsList(files, dirs, dir) {
   if(dir){const parent=dir.includes('/')?dir.substring(0,dir.lastIndexOf('/')):'';h+=`<button class="sitem" onclick="loadDocsList('${parent}')" style="color:var(--accent);font-size:.75rem">← zurück</button>`;}
   dirs.forEach(d=>{
     const icon=d.name==='skills'?'🛠️':d.name==='memory'?'🧠':d.name==='checklists'?'✅':'📁';
-    const cnt=d.count!=null?` <span style="color:var(--muted);font-size:.7rem">(${d.count})</span>`:'';
-    h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/${cnt}</button>`;
+    h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;
   });
   if(!files.length&&!dirs.length) h+='<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>';
   files.forEach(f=>{
