@@ -28,6 +28,9 @@
     .tab{padding:.6rem 1rem;font-size:.85rem;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
     .tab:hover{color:var(--text)}
     .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+    .filter-chip{padding:.25rem .6rem;font-size:.73rem;border:1px solid var(--border);border-radius:99px;background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+    .filter-chip:hover{border-color:var(--accent);color:var(--accent)}
+    .filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
     .page{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;min-width:0}
     .page.active{display:block}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
@@ -233,6 +236,14 @@
       <div class="sidebar-title">Dateien</div>
       <div style="padding:.5rem .75rem;border-bottom:1px solid var(--border)">
         <input class="ifield" id="docSearch" placeholder="🔍 Suchen…" oninput="filterDocs(this.value)" style="margin-bottom:0;font-size:.8rem;padding:.3rem .6rem" />
+      </div>
+      <div id="docFilterChips" style="display:flex;flex-wrap:wrap;gap:.3rem;padding:.5rem .75rem;border-bottom:1px solid var(--border);background:var(--surface)">
+        <button class="filter-chip active" onclick="applyDocFilter('all',this)">Alle</button>
+        <button class="filter-chip" onclick="applyDocFilter('agent',this)">🤖 Agent</button>
+        <button class="filter-chip" onclick="applyDocFilter('memory',this)">🧠 Gedächtnis</button>
+        <button class="filter-chip" onclick="applyDocFilter('skills',this)">🛠️ Skills</button>
+        <button class="filter-chip" onclick="applyDocFilter('processes',this)">⚙️ Abläufe</button>
+        <button class="filter-chip" onclick="applyDocFilter('today',this)">🕐 Heute</button>
       </div>
       <div id="docsList"></div>
     </div>
@@ -707,6 +718,9 @@ let allDocsData = { files: [], dirs: [], dir: '' };
 async function loadDocsList(dir){
   dir=dir||'';
   document.getElementById('docSearch').value='';
+  // Filter-Chips zurücksetzen wenn in Ordner navigiert wird
+  activeDocFilter = 'all';
+  document.querySelectorAll('.filter-chip').forEach((c,i)=>c.classList.toggle('active',i===0));
   const ws=await api('/api/workspace'+(dir?`?dir=${encodeURIComponent(dir)}`:''));
   allDocsData = { files: ws.files||[], dirs: ws.dirs||[], dir };
   renderDocsList(ws.files||[], ws.dirs||[], dir);
@@ -724,6 +738,51 @@ function renderDocsList(files, dirs, dir) {
   if(!files.length&&!dirs.length) h+='<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>';
   files.forEach(f=>{h+=`<button class="sitem ${curDoc===f.path?'active':''}" onclick="openDoc('${f.path}')">${f.name}</button>`;});
   el.innerHTML=h;
+}
+
+let activeDocFilter = 'all';
+
+// Agent-Dateien: Root-Dateien die den Bot definieren
+const AGENT_FILES = ['SOUL.md','USER.md','AGENTS.md','IDENTITY.md','HEARTBEAT.md','MEMORY.md'];
+// Abläufe: references/, checklists/, checklisten/
+const PROCESS_PATHS = ['references/', 'checklists/', 'checklisten/'];
+
+function applyDocFilter(filter, btn) {
+  activeDocFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('docSearch').value = '';
+
+  if (filter === 'all') {
+    renderDocsList(allDocsData.files, allDocsData.dirs, allDocsData.dir);
+    return;
+  }
+
+  const now = Date.now();
+  const todayMs = 24 * 60 * 60 * 1000;
+
+  // Alle Dateien flach (inkl. Unterordner nötig → wir filtern was geladen ist)
+  let files = allDocsData.files || [];
+  let dirs = allDocsData.dirs || [];
+
+  if (filter === 'agent') {
+    files = files.filter(f => AGENT_FILES.includes(f.name));
+    dirs = [];
+  } else if (filter === 'memory') {
+    files = files.filter(f => f.name === 'MEMORY.md' || f.path.startsWith('memory/'));
+    dirs = dirs.filter(d => d.name === 'memory');
+  } else if (filter === 'skills') {
+    files = files.filter(f => f.path.startsWith('skills/'));
+    dirs = dirs.filter(d => d.name === 'skills');
+  } else if (filter === 'processes') {
+    files = files.filter(f => PROCESS_PATHS.some(p => f.path.startsWith(p)));
+    dirs = dirs.filter(d => PROCESS_PATHS.some(p => (d.name+'/') === p || p.startsWith(d.name+'/')));
+  } else if (filter === 'today') {
+    files = files.filter(f => f.modified && (now - new Date(f.modified).getTime()) < todayMs);
+    dirs = [];
+  }
+
+  renderDocsList(files, dirs, allDocsData.dir);
 }
 
 let searchTimer = null;
