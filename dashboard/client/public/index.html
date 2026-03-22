@@ -797,13 +797,20 @@ async function applyDocFilter(filter, btn) {
   btn.classList.add('active');
   document.getElementById('docSearch').value = '';
 
-  // Ordner-basierte Filter: direkt in den Ordner navigieren (Dateien sind verschachtelt)
+  // Ordner-basierte Filter: immer vom Root aus navigieren
   if (filter === 'skills') { await loadDocsList('skills'); return; }
   if (filter === 'memory') { await loadDocsList('memory'); return; }
   if (filter === 'processes') {
-    // references/ bevorzugen, fallback checklisten/
-    const hasRef = allDocsData.dirs && allDocsData.dirs.some(d => d.name === 'references');
-    await loadDocsList(hasRef ? 'references' : 'checklisten');
+    // Root-Daten holen um zu prüfen welcher Ordner existiert
+    const rootWs = await api('/api/workspace');
+    const rootDirs = rootWs.dirs || [];
+    const hasRef = rootDirs.some(d => d.name === 'references');
+    const hasChecklist = rootDirs.some(d => d.name === 'checklisten' || d.name === 'checklists');
+    const target = hasRef ? 'references' : hasChecklist ? (rootDirs.find(d=>d.name==='checklisten'||d.name==='checklists').name) : null;
+    if (target) { await loadDocsList(target); return; }
+    // Fallback: Root-Dateien zeigen
+    allDocsData = { files: rootWs.files||[], dirs: rootWs.dirs||[], dir: '' };
+    renderDocsList(sortFiles(allDocsData.files), allDocsData.dirs, '');
     return;
   }
 
