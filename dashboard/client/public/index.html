@@ -31,6 +31,9 @@
     .filter-chip{padding:.25rem .6rem;font-size:.73rem;border:1px solid var(--border);border-radius:99px;background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
     .filter-chip:hover{border-color:var(--accent);color:var(--accent)}
     .filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .sort-btn{padding:.2rem .55rem;font-size:.7rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+    .sort-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .sort-btn.active{background:var(--surface);border-color:var(--accent);color:var(--accent);font-weight:600}
     .page{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;min-width:0}
     .page.active{display:block}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
@@ -244,6 +247,11 @@
         <button class="filter-chip" onclick="applyDocFilter('skills',this)">🛠️ Skills</button>
         <button class="filter-chip" onclick="applyDocFilter('processes',this)">⚙️ Abläufe</button>
         <button class="filter-chip" onclick="applyDocFilter('today',this)">🕐 Heute</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:.4rem;padding:.35rem .75rem;border-bottom:1px solid var(--border);background:var(--surface)">
+        <span style="font-size:.7rem;color:var(--muted);flex-shrink:0">Sortierung:</span>
+        <button class="sort-btn active" id="sortAZ" onclick="applyDocSort('az',this)">A–Z</button>
+        <button class="sort-btn" id="sortDate" onclick="applyDocSort('date',this)">🕐 Zuletzt geändert</button>
       </div>
       <div id="docsList"></div>
     </div>
@@ -723,7 +731,7 @@ async function loadDocsList(dir){
   document.querySelectorAll('.filter-chip').forEach((c,i)=>c.classList.toggle('active',i===0));
   const ws=await api('/api/workspace'+(dir?`?dir=${encodeURIComponent(dir)}`:''));
   allDocsData = { files: ws.files||[], dirs: ws.dirs||[], dir };
-  renderDocsList(ws.files||[], ws.dirs||[], dir);
+  renderDocsList(sortFiles(ws.files||[]), ws.dirs||[], dir);
 }
 
 function renderDocsList(files, dirs, dir) {
@@ -736,11 +744,38 @@ function renderDocsList(files, dirs, dir) {
     h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/${cnt}</button>`;
   });
   if(!files.length&&!dirs.length) h+='<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>';
-  files.forEach(f=>{h+=`<button class="sitem ${curDoc===f.path?'active':''}" onclick="openDoc('${f.path}')">${f.name}</button>`;});
+  files.forEach(f=>{
+    const dateStr = activeDocSort === 'date' && f.modified
+      ? `<span style="display:block;font-size:.68rem;color:var(--muted)">${new Date(f.modified).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>`
+      : '';
+    h+=`<button class="sitem ${curDoc===f.path?'active':''}" onclick="openDoc('${f.path}')">${f.name}${dateStr}</button>`;
+  });
   el.innerHTML=h;
 }
 
 let activeDocFilter = 'all';
+let activeDocSort = 'az';
+
+function applyDocSort(sort, btn) {
+  activeDocSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Re-render mit aktuellem Filter
+  applyCurrentFilter();
+}
+
+function applyCurrentFilter() {
+  // Re-apply the current filter to re-render sorted
+  const btn = [...document.querySelectorAll('.filter-chip')].find(b=>b.classList.contains('active'));
+  if (btn) applyDocFilter(activeDocFilter, btn);
+}
+
+function sortFiles(files) {
+  if (activeDocSort === 'date') {
+    return [...files].sort((a,b) => new Date(b.modified||0) - new Date(a.modified||0));
+  }
+  return [...files].sort((a,b) => a.name.localeCompare(b.name));
+}
 
 // Agent-Dateien: Root-Dateien die den Bot definieren
 const AGENT_FILES = ['SOUL.md','USER.md','AGENTS.md','IDENTITY.md','HEARTBEAT.md','MEMORY.md'];
@@ -782,7 +817,7 @@ function applyDocFilter(filter, btn) {
     dirs = [];
   }
 
-  renderDocsList(files, dirs, allDocsData.dir);
+  renderDocsList(sortFiles(files), dirs, allDocsData.dir);
 }
 
 let searchTimer = null;
