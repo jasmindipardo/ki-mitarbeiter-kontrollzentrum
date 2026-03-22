@@ -734,13 +734,23 @@ async function loadDocsList(dir){
   renderDocsList(sortFiles(ws.files||[]), ws.dirs||[], dir);
 }
 
+function sortDirs(dirs) {
+  if (activeDocSort === 'date') {
+    return [...dirs].sort((a,b) => new Date(b.modified||0) - new Date(a.modified||0));
+  }
+  return [...dirs].sort((a,b) => a.name.localeCompare(b.name));
+}
+
 function renderDocsList(files, dirs, dir) {
   const el=document.getElementById('docsList');
   let h='';
   if(dir){const parent=dir.includes('/')?dir.substring(0,dir.lastIndexOf('/')):'';h+=`<button class="sitem" onclick="loadDocsList('${parent}')" style="color:var(--accent);font-size:.75rem">← zurück</button>`;}
-  dirs.forEach(d=>{
+  sortDirs(dirs).forEach(d=>{
     const icon=d.name==='skills'?'🛠️':d.name==='memory'?'🧠':d.name==='checklists'?'✅':'📁';
-    h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/</button>`;
+    const dateStr = activeDocSort === 'date' && d.modified
+      ? `<span style="display:block;font-size:.68rem;color:var(--muted)">${new Date(d.modified).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>`
+      : '';
+    h+=`<button class="sitem" onclick="loadDocsList('${d.path}')" style="font-weight:600">${icon} ${d.name}/${dateStr}</button>`;
   });
   if(!files.length&&!dirs.length) h+='<div style="padding:.75rem 1rem;color:var(--muted);font-size:.82rem">Keine Dateien</div>';
   files.forEach(f=>{

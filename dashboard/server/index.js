@@ -332,16 +332,21 @@ app.get('/api/workspace', requireAuth, (req, res) => {
       })
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Unterordner anzeigen (skills/, memory/ etc.) mit Dateianzahl
+    // Unterordner anzeigen (skills/, memory/ etc.)
     const dirs = entries
       .filter(e => e.isDirectory() && !e.name.startsWith('.') && !['node_modules', '__pycache__'].includes(e.name))
       .map(e => {
         const dpath = path.join(targetPath, e.name);
-        let count = 0;
+        let modified = null;
         try {
-          count = fs.readdirSync(dpath).filter(f => f.endsWith('.md') || f.endsWith('.json')).length;
+          // Neuestes mtime aus allen Dateien im Ordner
+          const children = fs.readdirSync(dpath);
+          const mtimes = children.map(f => {
+            try { return fs.statSync(path.join(dpath, f)).mtime; } catch { return null; }
+          }).filter(Boolean);
+          if (mtimes.length) modified = new Date(Math.max(...mtimes.map(m => m.getTime())));
         } catch {}
-        return { name: e.name, path: safedir ? `${safedir}/${e.name}` : e.name, count };
+        return { name: e.name, path: safedir ? `${safedir}/${e.name}` : e.name, modified };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
 
