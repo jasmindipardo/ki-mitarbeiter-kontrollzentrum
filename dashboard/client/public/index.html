@@ -782,36 +782,42 @@ const AGENT_FILES = ['SOUL.md','USER.md','AGENTS.md','IDENTITY.md','HEARTBEAT.md
 // Abläufe: references/, checklists/, checklisten/
 const PROCESS_PATHS = ['references/', 'checklists/', 'checklisten/'];
 
-function applyDocFilter(filter, btn) {
+async function applyDocFilter(filter, btn) {
   activeDocFilter = filter;
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('docSearch').value = '';
 
+  // Ordner-basierte Filter: direkt in den Ordner navigieren (Dateien sind verschachtelt)
+  if (filter === 'skills') { await loadDocsList('skills'); return; }
+  if (filter === 'memory') { await loadDocsList('memory'); return; }
+  if (filter === 'processes') {
+    // references/ bevorzugen, fallback checklisten/
+    const hasRef = allDocsData.dirs && allDocsData.dirs.some(d => d.name === 'references');
+    await loadDocsList(hasRef ? 'references' : 'checklisten');
+    return;
+  }
+
+  // Root-basierte Filter (agent, today, all)
+  // Sicherstellen dass wir Root-Daten haben
+  if (allDocsData.dir && allDocsData.dir !== '/') {
+    const ws = await api('/api/workspace');
+    allDocsData = { files: ws.files||[], dirs: ws.dirs||[], dir: '' };
+  }
+
   if (filter === 'all') {
-    renderDocsList(allDocsData.files, allDocsData.dirs, allDocsData.dir);
+    renderDocsList(sortFiles(allDocsData.files), allDocsData.dirs, allDocsData.dir);
     return;
   }
 
   const now = Date.now();
   const todayMs = 24 * 60 * 60 * 1000;
-
-  // Alle Dateien flach (inkl. Unterordner nötig → wir filtern was geladen ist)
   let files = allDocsData.files || [];
   let dirs = allDocsData.dirs || [];
 
   if (filter === 'agent') {
     files = files.filter(f => AGENT_FILES.includes(f.name));
     dirs = [];
-  } else if (filter === 'memory') {
-    files = files.filter(f => f.name === 'MEMORY.md' || f.path.startsWith('memory/'));
-    dirs = dirs.filter(d => d.name === 'memory');
-  } else if (filter === 'skills') {
-    files = files.filter(f => f.path.startsWith('skills/'));
-    dirs = dirs.filter(d => d.name === 'skills');
-  } else if (filter === 'processes') {
-    files = files.filter(f => PROCESS_PATHS.some(p => f.path.startsWith(p)));
-    dirs = dirs.filter(d => PROCESS_PATHS.some(p => (d.name+'/') === p || p.startsWith(d.name+'/')));
   } else if (filter === 'today') {
     files = files.filter(f => f.modified && (now - new Date(f.modified).getTime()) < todayMs);
     dirs = [];
