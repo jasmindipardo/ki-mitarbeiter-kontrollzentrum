@@ -726,9 +726,6 @@ let allDocsData = { files: [], dirs: [], dir: '' };
 async function loadDocsList(dir){
   dir=dir||'';
   document.getElementById('docSearch').value='';
-  // Filter-Chips zurücksetzen wenn in Ordner navigiert wird
-  activeDocFilter = 'all';
-  document.querySelectorAll('.filter-chip').forEach((c,i)=>c.classList.toggle('active',i===0));
   const ws=await api('/api/workspace'+(dir?`?dir=${encodeURIComponent(dir)}`:''));
   allDocsData = { files: ws.files||[], dirs: ws.dirs||[], dir };
   renderDocsList(sortFiles(ws.files||[]), ws.dirs||[], dir);
