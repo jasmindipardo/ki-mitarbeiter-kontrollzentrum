@@ -1,6 +1,6 @@
 {
   "name": "ki-mitarbeiter-kontrollzentrum",
-  "version": "1.0.0",
+  "version": "1.1",
   "description": "KI-Mitarbeiter Kontrollzentrum – für den Kurs ",
   "main": "server/index.js",
   "scripts": {
