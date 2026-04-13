@@ -28,6 +28,7 @@ Restart=always
 RestartSec=5
 User=$CURRENT_USER
 Environment=HOME=$USER_HOME
+Environment=DASHBOARD_HOST=$(tailscale ip -4 2>/dev/null || echo 127.0.0.1)
 StandardOutput=journal
 StandardError=journal
 

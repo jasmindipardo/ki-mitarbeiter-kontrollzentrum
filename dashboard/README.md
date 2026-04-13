@@ -46,9 +46,11 @@ npm start
 
 ### Schritt 5: Im Browser öffnen
 - **Lokal:** http://localhost:7433
-- **Von überall via Tailscale:** http://DEINE-TAILSCALE-IP:7433
+- **Von überall via Tailscale:** http://DEINE-TAILSCALE-IP:7433 (empfohlen und standardmäßig vorgesehen)
 
 Deine Tailscale-IP: `tailscale ip -4`
+
+Wichtig: Das Dashboard sollte nicht öffentlich auf `0.0.0.0` lauschen. Für den Autostart wird deshalb `DASHBOARD_HOST` auf die aktuelle Tailscale-IP gesetzt. Wenn keine Tailscale-IP verfügbar ist, fällt das Setup auf `127.0.0.1` zurück.
 
 ---
 
@@ -59,6 +61,7 @@ Deine Tailscale-IP: `tailscale ip -4`
 | 🔐 Login-Pflicht | Passwort-Schutz vor dem ersten Aufruf |
 | ⏱️ Session-Ablauf | Automatisch nach 8 Stunden ausgeloggt |
 | 🔒 CORS-Sperre | Nur Tailscale-IPs (100.x.x.x) und localhost erlaubt |
+| 🌐 Bindung nur an Tailscale | Server bindet standardmäßig an `DASHBOARD_HOST` bzw. die Tailscale-IP statt an `0.0.0.0` |
 | 🚫 Brute-Force-Schutz | Nach 5 falschen Versuchen: 15 Minuten Sperre |
 | ⏱️ Timing-sicherer Login | Verhindert Passwort-Erraten über Antwortzeiten |
 | 🛡️ Input-Validierung | Alle IDs und Keys werden auf gültige Zeichen geprüft |

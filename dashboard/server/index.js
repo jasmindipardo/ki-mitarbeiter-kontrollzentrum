@@ -188,7 +188,7 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.use(express.static(path.join(__dirname, '../client/public'), { maxAge: 0, etag: false }));
 
 function run(cmd) {
-  try { return execSync(cmd, { encoding: 'utf8', timeout: 8000 }).trim(); }
+  try { return execSync(cmd, { encoding: 'utf8', timeout: 20000 }).trim(); }
   catch { return null; }
 }
 
@@ -216,15 +216,15 @@ app.get('/api/tailscale', requireAuth, (req, res) => {
 // CRON JOBS – lesen, aktivieren, deaktivieren, löschen, ausführen
 // ─────────────────────────────────────────
 let cronCache = { data: null, expiresAt: 0 };
+const CRON_JOBS_PATH = path.join(HOME, '.openclaw', 'cron', 'jobs.json');
 
 function getCrons(fresh = false) {
   const now = Date.now();
   if (!fresh && cronCache.data && now < cronCache.expiresAt) return cronCache.data;
-  const raw = run('openclaw cron list --json 2>/dev/null');
-  if (!raw) return { jobs: [] };
   try {
+    const raw = fs.readFileSync(CRON_JOBS_PATH, 'utf8');
     const data = JSON.parse(raw);
-    cronCache = { data, expiresAt: now + 30000 }; // 30s Cache
+    cronCache = { data, expiresAt: now + 5000 }; // 5s Cache
     return data;
   } catch { return { jobs: [] }; }
 }
@@ -620,6 +620,41 @@ app.get('/api/logs', requireAuth, (req, res) => {
 
 
 // ─────────────────────────────────────────
+// VERSION & UPDATE
+// ─────────────────────────────────────────
+app.get('/api/version', requireAuth, (req, res) => {
+  try {
+    const repoPath = path.join(HOME, 'ki-mitarbeiter-kontrollzentrum');
+    // Version aus lokaler package.json
+    const pkgPath = path.join(repoPath, 'dashboard', 'package.json');
+    const localVersion = fs.existsSync(pkgPath)
+      ? (JSON.parse(fs.readFileSync(pkgPath, 'utf8')).version || '?')
+      : '?';
+    // Remote-Version aus GitHub (ohne Auth, public repo)
+    run(`git -C "${repoPath}" fetch --quiet 2>/dev/null`);
+    const remotePkgRaw = run(`git -C "${repoPath}" show origin/main:dashboard/package.json 2>/dev/null`);
+    let remoteVersion = localVersion;
+    if (remotePkgRaw) {
+      try { remoteVersion = JSON.parse(remotePkgRaw).version || localVersion; } catch {}
+    }
+    const updateAvailable = remoteVersion !== localVersion;
+    res.json({ localVersion, remoteVersion, updateAvailable });
+  } catch(e) { res.json({ localVersion: '?', remoteVersion: '?', updateAvailable: false, error: e.message }); }
+});
+
+app.post('/api/update', requireAuth, (req, res) => {
+  const repoPath = path.join(HOME, 'ki-mitarbeiter-kontrollzentrum');
+  try {
+    const pullResult = run(`git -C "${repoPath}" pull 2>&1`);
+    const installResult = run(`cd "${repoPath}/dashboard" && npm install --silent 2>&1`);
+    audit(req.clientIp, 'DASHBOARD_UPDATE', pullResult?.slice(0, 100));
+    res.json({ ok: true, pullResult, installResult, message: 'Update abgeschlossen – Seite neu laden!' });
+    // Dashboard-Prozess neu starten nach kurzer Verzögerung
+    setTimeout(() => { run(`cd "${repoPath}/dashboard" && pm2 restart kontrollzentrum 2>/dev/null || node server/index.js &`); }, 2000);
+  } catch(e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// ─────────────────────────────────────────
 // GATEWAY NEUSTART
 // ─────────────────────────────────────────
 app.post('/api/restart', requireAuth, (req, res) => {
@@ -677,7 +712,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/public/index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, process.env.DASHBOARD_HOST || '100.64.197.3', () => {
   const ip = run('tailscale ip -4');
   const localUrl  = `http://localhost:${PORT}`;
   const tsUrl     = ip ? `http://${ip}:${PORT}` : null;
