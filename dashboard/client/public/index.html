@@ -133,6 +133,8 @@
     <div class="header-sub" id="headerSub">Lädt…</div>
   </div>
   <div class="header-right">
+    <span id="versionBadge" style="font-size:.72rem;color:var(--muted);font-family:monospace"></span>
+    <button class="btn btn-success btn-sm" id="updateBtn" style="display:none" onclick="doUpdate()">⬆ Update verfügbar</button>
     <button class="btn" onclick="loadAll()">↻ Aktualisieren</button>
     <button class="btn btn-danger btn-sm" onclick="doLogout()">Abmelden</button>
   </div>
@@ -394,9 +396,37 @@ async function doLogin() {
     if (r.ok && data.token) {
       authToken = data.token; sessionStorage.setItem('ki_token', authToken);
       document.getElementById('loginOverlay').classList.remove('show');
-      loadAll();
+      loadAll(); checkVersion();
     } else { errEl.textContent = data.error||'Falsches Passwort'; document.getElementById('loginPw').value=''; }
   } catch(e) { errEl.textContent='Verbindungsfehler'; }
+}
+async function checkVersion() {
+  try {
+    const v = await api('/api/version');
+    const badge = document.getElementById('versionBadge');
+    const btn = document.getElementById('updateBtn');
+    if (v && v.localVersion) {
+      badge.textContent = `v${v.localVersion}`;
+      badge.title = `Installiert: v${v.localVersion} | Aktuell: v${v.remoteVersion}`;
+    }
+    if (v && v.updateAvailable) {
+      btn.style.display = '';
+      btn.textContent = `⬆ Update auf v${v.remoteVersion}`;
+      btn.title = `Neue Version v${v.remoteVersion} verfügbar`;
+    } else {
+      btn.style.display = 'none';
+    }
+  } catch(e) {}
+}
+async function doUpdate() {
+  if (!confirm('Dashboard jetzt aktualisieren?\n\nDie Seite lädt danach automatisch neu.')) return;
+  const btn = document.getElementById('updateBtn');
+  btn.disabled = true; btn.textContent = '⏳ Update läuft…';
+  try {
+    const r = await api('/api/update', {method:'POST'});
+    if (r.ok) { toast('Update erfolgreich! Seite wird neu geladen…'); setTimeout(()=>location.reload(), 3000); }
+    else { toast('Fehler beim Update: ' + (r.error||'unbekannt'), 'err'); btn.disabled=false; btn.textContent='⬆ Update verfügbar'; }
+  } catch(e) { toast('Update fehlgeschlagen', 'err'); btn.disabled=false; btn.textContent='⬆ Update verfügbar'; }
 }
 async function doLogout() {
   await fetch('/api/logout',{method:'POST',headers:{'Authorization':'Bearer '+authToken}}).catch(()=>{});
@@ -985,7 +1015,9 @@ async function loadAll(){
   hideLoadBanner();
 }
 loadAll();
+checkVersion();
 setInterval(loadAll, 300000); // alle 5 Minuten
+setInterval(checkVersion, 600000); // Version alle 10 Minuten prüfen
 </script>
 </body>
 </html>
